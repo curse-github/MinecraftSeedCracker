@@ -1,0 +1,1 @@
+Project to "crack" seeds in minecraft to find desirable features in the procedural generation, displays reverse engineering of decompile java code, understanding of LCG random number generators, linear programming, and general C++ programming proficiency

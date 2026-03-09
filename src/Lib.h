@@ -6,6 +6,10 @@ const double TAU = 6.28318530718;
 
 unsigned int myMin(const unsigned int& a, const unsigned int& b);
 unsigned int myMax(const unsigned int& a, const unsigned int& b);
+int myMin(const int& a, const int& b);
+int myMax(const int& a, const int& b);
+int myMin(const double& a, const double& b);
+int myMax(const double& a, const double& b);
 int myAbs(const int& x);
 
 #pragma region structs
@@ -15,8 +19,8 @@ struct Nullable {
     T* value;
     public:
     bool hasValue;
-    Nullable() : value(nullptr), hasValue(false) {}
-    Nullable(T* _value) : value(_value), hasValue(_value != nullptr) {}
+    Nullable() : value(nullptr), hasValue(false) {};
+    Nullable(T* _value) : value(_value), hasValue(_value == nullptr) {};
     Nullable(const Nullable<T>& copy) = delete;
     Nullable(Nullable<T>&& move) = delete;
     Nullable<T>& operator=(const Nullable<T>& copy) = delete;
@@ -32,6 +36,7 @@ template <typename T>
 struct NonOwningNullable : public Nullable<T> {
     NonOwningNullable() : Nullable<T>() {}
     NonOwningNullable(T* _value) : Nullable<T>(_value) {}
+    NonOwningNullable(const Nullable<T>& copy) = delete;
     NonOwningNullable(NonOwningNullable<T>&& move) : Nullable<T>(move.value) {
         move.value = nullptr;
         move.hasValue = false;
@@ -39,7 +44,7 @@ struct NonOwningNullable : public Nullable<T> {
     ~NonOwningNullable() {}
     void operator=(T* _value) {
         this->value = _value;
-        this->hasValue = true;
+        this->hasValue = (_value == nullptr);
     }
     operator NonOwningNullable<const T>() && {
         NonOwningNullable<T> nullable = NonOwningNullable<const T>((const T*)this->value);
@@ -85,23 +90,78 @@ struct OwningNullable : public Nullable<T> {
 struct Vec2 {
     int x;
     int z;
-    Vec2(const int& _x, const int& _z) : x(_x), z(_z) {
+    Vec2(const int& _x, const int& _z) : x(_x), z(_z) {}
+    Vec2(const Vec2& copy) : x(copy.x), z(copy.z) {}
+    Vec2 operator+(const Vec2& rhs) const {
+        return Vec2(x + rhs.x, z + rhs.z);
     }
-    Vec2(const Vec2& copy) : x(copy.x), z(copy.z) {
+    Vec2 operator-(const Vec2& rhs) const {
+        return Vec2(x - rhs.x, z - rhs.z);
+    }
+    int magnitude() const {
+        return x*x + z*z;
+    }
+};
+struct Vec2D {
+    double x;
+    double z;
+    Vec2D(const double& _x, const double& _z) : x(_x), z(_z) {}
+    Vec2D(const Vec2D& copy) : x(copy.x), z(copy.z) {}
+    Vec2D operator+(const Vec2D& rhs) const {
+        return Vec2D(x + rhs.x, z + rhs.z);
+    }
+    Vec2D operator+(const Vec2& rhs) const {
+        return Vec2D(x + rhs.x, z + rhs.z);
+    }
+    Vec2D operator-(const Vec2D& rhs) const {
+        return Vec2D(x - rhs.x, z - rhs.z);
+    }
+    Vec2D operator-(const Vec2& rhs) const {
+        return Vec2D(x - rhs.x, z - rhs.z);
+    }
+    double magnitude() const {
+        return x*x + z*z;
     }
 };
 struct Vec3 {
     int x;
     int y;
     int z;
-    Vec3() : x(0), y(0), z(0) {
-    }
-    Vec3(const int& _x, const int& _y, const int& _z) : x(_x), y(_y), z(_z) {
-    }
+    Vec3() : x(0), y(0), z(0) {}
+    Vec3(const int& _x, const int& _y, const int& _z) : x(_x), y(_y), z(_z) {}
     Vec3 operator+(const Vec3& rhs) const {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
     }
-    Vec3(const Vec3& copy) : x(copy.x), y(copy.y), z(copy.z) {
+    Vec3 operator-(const Vec3& rhs) const {
+        return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
+    }
+    Vec3(const Vec3& copy) : x(copy.x), y(copy.y), z(copy.z) {}
+    int magnitude() const {
+        return x*x + y*y + z*z;
+    }
+};
+struct Vec3D {
+    double x;
+    double y;
+    double z;
+    Vec3D() : x(0), y(0), z(0) {}
+    Vec3D(const double& _x, const double& _y, const double& _z) : x(_x), y(_y), z(_z) {}
+    Vec3D operator+(const Vec3D& rhs) const {
+        return Vec3D(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+    Vec3D operator+(const Vec3& rhs) const {
+        return Vec3D(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+    Vec3D operator-(const Vec3D& rhs) const {
+        return Vec3D(x - rhs.x, y - rhs.y, z - rhs.z);
+    }
+    Vec3D operator-(const Vec3& rhs) const {
+        return Vec3D(x - rhs.x, y - rhs.y, z - rhs.z);
+    }
+    Vec3D(const Vec3D& copy) : x(copy.x), y(copy.y), z(copy.z) {
+    }
+    double magnitude() const {
+        return x*x + y*y + z*z;
     }
 };
 

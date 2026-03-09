@@ -5,14 +5,14 @@
 #include <cmath>
 #include "Random.h"
 
-struct Range {
+struct RandomRange {
     unsigned long long int min;
     unsigned long long int mult;
     unsigned long long int max;
-    Range(const unsigned long long int& _min, const unsigned long long int& _mult, const unsigned long long int& _max) : min(_min), mult(_mult), max(_max) {}
-    Range(const Range& copy) : min(copy.min), mult(copy.mult), max(copy.max) {}
+    RandomRange(const unsigned long long int& _min, const unsigned long long int& _mult, const unsigned long long int& _max) : min(_min), mult(_mult), max(_max) {}
+    RandomRange(const RandomRange& copy) : min(copy.min), mult(copy.mult), max(copy.max) {}
 };
-void printRanges(const std::vector<Range>& ranges, const long long int& mod);
+void printRanges(const std::vector<RandomRange>& ranges, const long long int& mod);
 class JavaSolver {
     unsigned long long int a;
     unsigned long long int inv_a;
@@ -23,7 +23,7 @@ class JavaSolver {
     // range.min < (a^n)*seed + b*geom(n-1) + k_n*m < range.max
     // ranges[n].min - b*geom(n-1) < (a^n)*seed + k_n*m < ranges[n].max - b*geom(n-1)
     // for each n value in ranges
-    std::vector<Range> ranges;
+    std::vector<RandomRange> ranges;
     public:
     JavaSolver(const unsigned long long int& _a = 25214903917ull, const unsigned long long int& _b = 11ull, const unsigned long long int& _m = (1ull << 48ull))
         : a(_a), inv_a(modInverse(_a, _m)), b(_b), m(_m) {}

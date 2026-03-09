@@ -1,0 +1,29 @@
+/*    */ package net.minecraft.world.inventory;
+/*    */ 
+/*    */ import java.util.Optional;
+/*    */ import java.util.function.BiFunction;
+/*    */ import net.minecraft.core.BlockPos;
+/*    */ import net.minecraft.world.level.Level;
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ 
+/*    */ class null
+/*    */   implements ContainerLevelAccess
+/*    */ {
+/* 22 */   public <T> Optional<T> evaluate(BiFunction<Level, BlockPos, T> action) { return Optional.of(action.apply(level, pos)); }
+/*    */ }
+
+
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\world\inventory\ContainerLevelAccess$2.class
+ * Java compiler version: 21 (65.0)
+ * JD-Core Version:       1.0.7
+ */

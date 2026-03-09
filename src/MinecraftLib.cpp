@@ -1,8 +1,23 @@
 #include "MinecraftLib.h"
 
+#pragma region Pos
 ChunkPos Pos::getChunkPos() const {
     return ChunkPos(x >> 4, z >> 4);
 }
+Pos Pos::getOffsetPos(Pos offset) const {
+    return operator+(offset);
+}
+// see BiomeCoords.fromBlock function in BiomeCoords.java
+BiomePos Pos::getBiomePos() const {
+    return BiomePos(x >> 2, z >> 2);
+}
+Vec3 Pos::toVec3() const {
+    return Vec3(x, y, z);
+}
+Vec3D Pos::toVec3D() const {
+    return Vec3D(x, y, z);
+}
+#pragma endregion Pos
 
 #pragma region ChunkPos
 ChunkPos& ChunkPos::operator=(const ChunkPos& copy) {
@@ -22,6 +37,23 @@ Pos ChunkPos::getOffsetPos(Pos offset) const {
     return getBlockPos() + offset;
 }
 #pragma endregion ChunkPos
+
+#pragma region BiomePos
+BiomePos& BiomePos::operator=(const BiomePos& copy) {
+    this->x = copy.x;
+    this->z = copy.z;
+    return *this;
+};
+BiomePos& BiomePos::operator=(BiomePos&& move) {
+    this->x = move.x;
+    this->z = move.z;
+    return *this;
+};
+// see BiomeCoords.toBlock function in BiomeCoords.java
+Pos BiomePos::getBlockPos() const {
+    return Pos(x << 2, 0, z << 2);
+}
+#pragma endregion BiomePos
 
 // see Direction enum in Direction.java
 Direction Directions[6] = {

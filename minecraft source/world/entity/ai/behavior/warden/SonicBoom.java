@@ -1,0 +1,110 @@
+/*     */ package net.minecraft.world.entity.ai.behavior.warden;
+/*     */ 
+/*     */ import com.google.common.collect.ImmutableMap;
+/*     */ import java.util.Objects;
+/*     */ import net.minecraft.core.particles.ParticleTypes;
+/*     */ import net.minecraft.server.level.ServerLevel;
+/*     */ import net.minecraft.sounds.SoundEvents;
+/*     */ import net.minecraft.util.Mth;
+/*     */ import net.minecraft.util.Unit;
+/*     */ import net.minecraft.world.entity.Entity;
+/*     */ import net.minecraft.world.entity.EntityAttachment;
+/*     */ import net.minecraft.world.entity.LivingEntity;
+/*     */ import net.minecraft.world.entity.ai.attributes.Attributes;
+/*     */ import net.minecraft.world.entity.ai.behavior.Behavior;
+/*     */ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+/*     */ import net.minecraft.world.entity.ai.memory.MemoryStatus;
+/*     */ import net.minecraft.world.entity.monster.warden.Warden;
+/*     */ import net.minecraft.world.phys.Vec3;
+/*     */ 
+/*     */ public class SonicBoom
+/*     */   extends Behavior<Warden>
+/*     */ {
+/*     */   private static final int DISTANCE_XZ = 15;
+/*     */   private static final int DISTANCE_Y = 20;
+/*     */   private static final double KNOCKBACK_VERTICAL = 0.5D;
+/*     */   private static final double KNOCKBACK_HORIZONTAL = 2.5D;
+/*     */   public static final int COOLDOWN = 40;
+/*  28 */   private static final int TICKS_BEFORE_PLAYING_SOUND = Mth.ceil(34.0D);
+/*  29 */   private static final int DURATION = Mth.ceil(60.0F);
+/*     */ 
+/*     */   
+/*  32 */   public SonicBoom() { super(ImmutableMap.of(MemoryModuleType.ATTACK_TARGET, MemoryStatus.VALUE_PRESENT, MemoryModuleType.SONIC_BOOM_COOLDOWN, MemoryStatus.VALUE_ABSENT, MemoryModuleType.SONIC_BOOM_SOUND_COOLDOWN, MemoryStatus.REGISTERED, MemoryModuleType.SONIC_BOOM_SOUND_DELAY, MemoryStatus.REGISTERED), DURATION); }
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */   
+/*  42 */   protected boolean checkExtraStartConditions(ServerLevel level, Warden body) { return body.closerThan((Entity)body.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).get(), 15.0D, 20.0D); }
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */   
+/*  47 */   protected boolean canStillUse(ServerLevel level, Warden body, long timestamp) { return true; }
+/*     */ 
+/*     */ 
+/*     */ 
+/*     */   
+/*     */   protected void start(ServerLevel level, Warden body, long timestamp) {
+/*  53 */     body.getBrain().setMemoryWithExpiry(MemoryModuleType.ATTACK_COOLING_DOWN, Boolean.valueOf(true), DURATION);
+/*     */     
+/*  55 */     body.getBrain().setMemoryWithExpiry(MemoryModuleType.SONIC_BOOM_SOUND_DELAY, Unit.INSTANCE, TICKS_BEFORE_PLAYING_SOUND);
+/*     */     
+/*  57 */     level.broadcastEntityEvent(body, (byte)62);
+/*  58 */     body.playSound(SoundEvents.WARDEN_SONIC_CHARGE, 3.0F, 1.0F);
+/*     */   }
+/*     */ 
+/*     */   
+/*     */   protected void tick(ServerLevel level, Warden body, long timestamp) {
+/*  63 */     body.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).ifPresent(target -> 
+/*  64 */         body.getLookControl().setLookAt(target.position()));
+/*     */ 
+/*     */     
+/*  67 */     if (body.getBrain().hasMemoryValue(MemoryModuleType.SONIC_BOOM_SOUND_DELAY) || body.getBrain().hasMemoryValue(MemoryModuleType.SONIC_BOOM_SOUND_COOLDOWN)) {
+/*     */       return;
+/*     */     }
+/*     */     
+/*  71 */     body.getBrain().setMemoryWithExpiry(MemoryModuleType.SONIC_BOOM_SOUND_COOLDOWN, Unit.INSTANCE, (DURATION - TICKS_BEFORE_PLAYING_SOUND));
+/*     */     
+/*  73 */     Objects.requireNonNull(body); body.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).filter(body::canTargetEntity)
+/*  74 */       .filter(target -> body.closerThan(target, 15.0D, 20.0D))
+/*  75 */       .ifPresent(target -> {
+/*  76 */           Vec3 source = body.position().add(body.getAttachments().get(EntityAttachment.WARDEN_CHEST, 0, body.getYRot()));
+/*  77 */           Vec3 delta = target.getEyePosition().subtract(source);
+/*     */           
+/*  79 */           Vec3 normalize = delta.normalize();
+/*     */           
+/*  81 */           int steps = Mth.floor(delta.length()) + 7;
+/*  82 */           for (int i = 1; i < steps; i++) {
+/*  83 */             Vec3 particlePos = source.add(normalize.scale(i));
+/*     */             
+/*  85 */             level.sendParticles(ParticleTypes.SONIC_BOOM, particlePos.x, particlePos.y, particlePos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+/*     */           } 
+/*     */           
+/*  88 */           body.playSound(SoundEvents.WARDEN_SONIC_BOOM, 3.0F, 1.0F);
+/*  89 */           if (target.hurtServer(level, level.damageSources().sonicBoom(body), 10.0F)) {
+/*  90 */             double knockbackVertical = 0.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+/*  91 */             double knockbackHorizontal = 2.5D * (1.0D - target.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
+/*  92 */             target.push(normalize.x() * knockbackHorizontal, normalize.y() * knockbackVertical, normalize.z() * knockbackHorizontal);
+/*     */           } 
+/*     */         });
+/*     */   }
+/*     */ 
+/*     */ 
+/*     */   
+/*  99 */   protected void stop(ServerLevel level, Warden body, long timestamp) { setCooldown(body, 40); }
+/*     */ 
+/*     */ 
+/*     */   
+/* 103 */   public static void setCooldown(LivingEntity body, int cooldown) { body.getBrain().setMemoryWithExpiry(MemoryModuleType.SONIC_BOOM_COOLDOWN, Unit.INSTANCE, cooldown); }
+/*     */ }
+
+
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\world\entity\ai\behavior\warden\SonicBoom.class
+ * Java compiler version: 21 (65.0)
+ * JD-Core Version:       1.0.7
+ */

@@ -1,0 +1,36 @@
+/*    */ package net.minecraft.server.jsonrpc.dataprovider;
+/*    */ 
+/*    */ import com.google.gson.JsonElement;
+/*    */ import com.mojang.serialization.JsonOps;
+/*    */ import java.nio.file.Path;
+/*    */ import java.util.concurrent.CompletableFuture;
+/*    */ import net.minecraft.data.CachedOutput;
+/*    */ import net.minecraft.data.DataProvider;
+/*    */ import net.minecraft.data.PackOutput;
+/*    */ import net.minecraft.server.jsonrpc.api.Schema;
+/*    */ import net.minecraft.server.jsonrpc.methods.DiscoveryService;
+/*    */ 
+/*    */ public class JsonRpcApiSchema
+/*    */   implements DataProvider
+/*    */ {
+/*    */   private final Path path;
+/*    */   
+/* 18 */   public JsonRpcApiSchema(PackOutput packOutput) { this.path = packOutput.getOutputFolder(PackOutput.Target.REPORTS).resolve("json-rpc-api-schema.json"); }
+/*    */ 
+/*    */ 
+/*    */   
+/*    */   public CompletableFuture<?> run(CachedOutput cache) {
+/* 23 */     DiscoveryService.DiscoverResponse discover = DiscoveryService.discover(Schema.getSchemaRegistry());
+/* 24 */     return DataProvider.saveStable(cache, (JsonElement)DiscoveryService.DiscoverResponse.CODEC.codec().encodeStart(JsonOps.INSTANCE, discover).getOrThrow(), this.path);
+/*    */   }
+/*    */ 
+/*    */ 
+/*    */   
+/* 29 */   public String getName() { return "Json RPC API schema"; }
+/*    */ }
+
+
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\server\jsonrpc\dataprovider\JsonRpcApiSchema.class
+ * Java compiler version: 21 (65.0)
+ * JD-Core Version:       1.0.7
+ */

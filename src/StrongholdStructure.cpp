@@ -24,8 +24,8 @@
 //              Structure.Context.constructor
 //                  Structure.Context.createChunkRandom(seed, chunkPos)
 //                      ChunkRandom.setCarverSeed(long seed, int chunkX = chunkPos.x, int chunkZ = chunkPos.z)
-//IMPORTANT                 Random worldSeed_rand = new Random(worldSeed)
-//IMPORTANT                 return new Random((long)chunkX * this->nextLong() ^ (long)chunkZ * this->nextLong() ^ worldSeed);
+//IMPORTANT                 LCG worldSeed_rand = new LCG(worldSeed)
+//IMPORTANT                 return new LCG((long)chunkX * this->nextLong() ^ (long)chunkZ * this->nextLong() ^ worldSeed);
 //              Structure.getValidStructurePosition(Structure.Context context) function in Structure.java
 //                  extends(Structure).getStructurePosition(Structure.Context context) function of class which extends Structure
 //                      Structure.StructurePosition.constructor(BlockPos pos, Consumer<StructurePiecesCollector> generator) in Structure.java
@@ -43,7 +43,7 @@
 //                      // though, its rather dissapointing, the StrongholdStructure class has not been switched to using the JigsawStructure, as proven by the code in the Structures.java file
 //                      StrongholdStructure.addPieces(Collector collector, Structure.Context context) in StrongholdStructure.java
 //                          // repeat until it has a portal room, clearing and starting over if it doesnt.
-//                              Random rand = new Random()
+//                              LCG rand = new LCG()
 //IMPORTANT                     rand.setCarverSeed(seed+#attempts, chunkX, chunkZ)// see definition above
 //                              static StrongholdGenerator.init() function in StrongholdGenerator.java
 //                                  // populates the possiblePieces list with the following
@@ -70,7 +70,7 @@
 //                              call StructurePiece.fillOpenings(generator, rand) on "peice" from file StructurePiece.java
 //                                  // see definition above
 //                              StructurePiecesCollector.shiftInto(sea_level, world_bottom, rand, 10)// shifts structure underground
-//                                  StructurePiecesCollector.shiftInto(int topY, int bottomY, Random rand, int topPenalty)
+//                                  StructurePiecesCollector.shiftInto(int topY, int bottomY, LCG rand, int topPenalty)
 //                                      yLevel = bounds.height + bittomY + 1
 //                                      if (yLevel < topY - topPenalty) yLevel += rand.nextInt(topY - topPenalty - yLevel) // IMPORTANT
 //                                      StructurePiecesCollector.shift(yLevel - bounds.maxY)
@@ -145,7 +145,7 @@ bool checkRemainingPieces(const std::vector<PieceData>& possiblePieces) {
     return tmp;
 }
 // see StrongholdGenerator.Piece.getRandomEntrance function in StrongholdGenerator.java
-EntranceType getRandomEntrance(Random& rand) {
+EntranceType getRandomEntrance(LCG& rand) {
     int rnd = rand.nextInt(5);
     switch (rnd) {
         case 0:
@@ -172,7 +172,7 @@ BlockBox* getIntersecting(const BlockBox& box, const std::vector<Piece*>& _piece
     return nullptr;
 }
 // see StrongholdGenerator.createPiece function in StrongholdGenerator.java
-OwningNullable<Piece> createPiece(const unsigned int& pieceType, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, Direction orientation, int chainLength) {
+OwningNullable<Piece> createPiece(const unsigned int& pieceType, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, Direction orientation, int chainLength) {
     // std::cout << "                createPiece(\"" << allPieceNames[pieceType] << "\")\n";
     switch (pieceType) {
         case PieceTypeCorridor: {
@@ -202,7 +202,7 @@ OwningNullable<Piece> createPiece(const unsigned int& pieceType, std::vector<Pie
     return OwningNullable<Piece>();
 }
 // see StrongholdGenerator.pickPiece function in StrongholdGenerator.java
-OwningNullable<Piece> pickPiece(Start& start, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, Direction orientation, int chainLength) {
+OwningNullable<Piece> pickPiece(Start& start, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, Direction orientation, int chainLength) {
     // std::cout << "            pickPiece()\n";
     if (!checkRemainingPieces(start.possiblePieces)) return OwningNullable<Piece>();
     if (activePieceType != PieceTypeNone) {
@@ -246,7 +246,7 @@ OwningNullable<Piece> pickPiece(Start& start, std::vector<Piece*>& _pieces, Rand
     return OwningNullable<Piece>();
 }
 // see StrongholdGenerator.generatePiece function in StrongholdGenerator.java
-NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     // std::cout << "        generatePiece(chainLength=" << chainLength << ")\n";
     Start& _start = (Start&)start;
     if (chainLength > 50) { std::cout << "chainLength reached maximum.\n"; return NonOwningNullable<StructurePiece>(); }
@@ -268,7 +268,7 @@ NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vect
         return NonOwningNullable<StructurePiece>();
 }
 // see StrongholdGenerator.Piece.fillForwardOpening function in StrongholdGenerator.java
-NonOwningNullable<StructurePiece> Piece::fillForwardOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset) {
+NonOwningNullable<StructurePiece> Piece::fillForwardOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset) {
     // std::cout << "    fillForwardOpening()\n";
     switch (orientation.index) {
         case NORTH:
@@ -284,7 +284,7 @@ NonOwningNullable<StructurePiece> Piece::fillForwardOpening(StructurePiece& star
     }
 }
 // see StrongholdGenerator.Piece.fillNWOpening function in StrongholdGenerator.java
-NonOwningNullable<StructurePiece> Piece::fillNWOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset) {
+NonOwningNullable<StructurePiece> Piece::fillNWOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset) {
     // std::cout << "    fillNWOpening()\n";
     switch (orientation.index) {
         case NORTH:
@@ -300,7 +300,7 @@ NonOwningNullable<StructurePiece> Piece::fillNWOpening(StructurePiece& start, st
     }
 }
 // see StrongholdGenerator.Piece.fillSEOpening function in StrongholdGenerator.java
-NonOwningNullable<StructurePiece> Piece::fillSEOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset) {
+NonOwningNullable<StructurePiece> Piece::fillSEOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset) {
     // std::cout << "    fillSEOpening()\n";
     switch (orientation.index) {
         case NORTH:
@@ -318,11 +318,11 @@ NonOwningNullable<StructurePiece> Piece::fillSEOpening(StructurePiece& start, st
 
 struct Piece;
 // see StructurePiece.fillOpenings function in StructurePiece.java
-void StructurePiece::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void StructurePiece::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "fillOpenings()\n";
 }
 // see StrongholdGenerator.Piece.fillOpenings function in StrongholdGenerator.java
-void Piece::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void Piece::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // StructurePiece::fillOpenings(start, _pieces, rand);
 }
 // see StrongholdGenerator.Piece.isInBounds function in StrongholdGenerator.java
@@ -331,13 +331,13 @@ bool Piece::isInBounds(BlockBox boundingBox) {
 }
 
 // see StrongholdGenerator.Corridor constructor in StrongholdGenerator.java
-Corridor::Corridor(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+Corridor::Corridor(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
     leftExitExists = rand.nextInt(2) == 0;
     rightExitExists = rand.nextInt(2) == 0;
 }
 // see StrongholdGenerator.Corridor.fillOpenings function in StrongholdGenerator.java
-void Corridor::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void Corridor::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "Corridor.";
     // Piece::fillOpenings(start, _pieces, rand);
     fillForwardOpening(start, _pieces, rand, 1, 1);
@@ -347,7 +347,7 @@ void Corridor::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces,
         fillSEOpening(start, _pieces, rand, 2, 1);
 }
 // see StrongholdGenerator.Corridor.create function in StrongholdGenerator.java
-OwningNullable<Corridor> Corridor::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<Corridor> Corridor::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(5, 5, 7), orientation);
     if (!Corridor::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<Corridor>();
@@ -356,17 +356,17 @@ OwningNullable<Corridor> Corridor::create(std::vector<Piece*>& _pieces, Random& 
 }
 
 // see StrongholdGenerator.PrisonHall constructor in StrongholdGenerator.java
-PrisonHall::PrisonHall(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+PrisonHall::PrisonHall(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.PrisonHall.fillOpenings function in StrongholdGenerator.java
-void PrisonHall::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void PrisonHall::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "PrisonHall.";
     // Piece::fillOpenings(start, _pieces, rand);
     fillForwardOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.PrisonHall.create function in StrongholdGenerator.java
-OwningNullable<PrisonHall> PrisonHall::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<PrisonHall> PrisonHall::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(9, 5, 11), orientation);
     if (!PrisonHall::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<PrisonHall>();
@@ -374,16 +374,16 @@ OwningNullable<PrisonHall> PrisonHall::create(std::vector<Piece*>& _pieces, Rand
 }
 
 // see StrongholdGenerator.Turn.fillOpenings function in StrongholdGenerator.java
-void Turn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void Turn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // Piece::fillOpenings(start, _pieces, rand);
 }
 
 // see StrongholdGenerator.LeftTurn constructor in StrongholdGenerator.java
-LeftTurn::LeftTurn(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Turn(_chainLength, _boundingBox, _orientation) {
+LeftTurn::LeftTurn(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Turn(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.LeftTurn.fillOpenings function in StrongholdGenerator.java
-void LeftTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void LeftTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "LeftTurn.";
     // Piece::fillOpenings(start, _pieces, rand);
     if ((orientation.index == NORTH) || (orientation.index == EAST))
@@ -392,7 +392,7 @@ void LeftTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces,
         fillSEOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.LeftTurn.create function in StrongholdGenerator.java
-OwningNullable<LeftTurn> LeftTurn::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<LeftTurn> LeftTurn::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     // std::cout << "                    LeftTurn::create()\n";
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(5, 5, 5), orientation);
     if (!LeftTurn::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr)) {
@@ -402,11 +402,11 @@ OwningNullable<LeftTurn> LeftTurn::create(std::vector<Piece*>& _pieces, Random& 
 }
 
 // see StrongholdGenerator.RightTurn constructor in StrongholdGenerator.java
-RightTurn::RightTurn(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Turn(_chainLength, _boundingBox, _orientation) {
+RightTurn::RightTurn(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Turn(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.RightTurn.fillOpenings function in StrongholdGenerator.java
-void RightTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void RightTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "RightTurn.";
     // Piece::fillOpenings(start, _pieces, rand);
     if ((orientation.index == NORTH) || (orientation.index == EAST))
@@ -415,7 +415,7 @@ void RightTurn::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces
         fillNWOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.RightTurn.create function in StrongholdGenerator.java
-OwningNullable<RightTurn> RightTurn::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<RightTurn> RightTurn::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(5, 5, 5), orientation);
     if (!RightTurn::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<RightTurn>();
@@ -423,12 +423,12 @@ OwningNullable<RightTurn> RightTurn::create(std::vector<Piece*>& _pieces, Random
 }
 
 // see StrongholdGenerator.SquareRoom constructor in StrongholdGenerator.java
-SquareRoom::SquareRoom(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+SquareRoom::SquareRoom(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
     roomType = rand.nextInt(5);
 }
 // see StrongholdGenerator.SquareRoom.fillOpenings function in StrongholdGenerator.java
-void SquareRoom::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void SquareRoom::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "SquareRoom.";
     // Piece::fillOpenings(start, _pieces, rand);
     fillForwardOpening(start, _pieces, rand, 4, 1);
@@ -436,7 +436,7 @@ void SquareRoom::fillOpenings(StructurePiece& start, std::vector<Piece*>& _piece
     fillSEOpening(start, _pieces, rand, 4, 1);
 }
 // see StrongholdGenerator.SquareRoom.create function in StrongholdGenerator.java
-OwningNullable<SquareRoom> SquareRoom::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<SquareRoom> SquareRoom::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-4, -1, 0), Vec3(11, 7, 11), orientation);
     if (!SquareRoom::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<SquareRoom>();
@@ -445,17 +445,17 @@ OwningNullable<SquareRoom> SquareRoom::create(std::vector<Piece*>& _pieces, Rand
 }
 
 // see StrongholdGenerator.Stairs constructor in StrongholdGenerator.java
-Stairs::Stairs(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+Stairs::Stairs(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.Stairs.fillOpenings function in StrongholdGenerator.java
-void Stairs::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void Stairs::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "Stairs.";
     // Piece::fillOpenings(start, _pieces, rand);
     fillForwardOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.Stairs.create function in StrongholdGenerator.java
-OwningNullable<Stairs> Stairs::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<Stairs> Stairs::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -7, 0), Vec3(5, 11, 8), orientation);
     if (!Stairs::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<Stairs>();
@@ -467,11 +467,11 @@ OwningNullable<Stairs> Stairs::create(std::vector<Piece*>& _pieces, Random& rand
 SpiralStaircase::SpiralStaircase(const int& _chainLength, const Pos& position, const Direction& _orientation) : Piece(_chainLength, BlockBox({ position.x, 64, position.z }, 5, 11, 5, _orientation), _orientation), isStart(true) {
     entryDoor = EntranceType::OPENING;
 }
-SpiralStaircase::SpiralStaircase(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation), isStart(false) {
+SpiralStaircase::SpiralStaircase(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation), isStart(false) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.SpiralStaircase.fillOpenings function in StrongholdGenerator.java
-void SpiralStaircase::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void SpiralStaircase::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "SpiralStaircase.";
     // Piece::fillOpenings(start, _pieces, rand);
     if (isStart)
@@ -479,7 +479,7 @@ void SpiralStaircase::fillOpenings(StructurePiece& start, std::vector<Piece*>& _
     fillForwardOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.SpiralStaircase.create function in StrongholdGenerator.java
-OwningNullable<SpiralStaircase> SpiralStaircase::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<SpiralStaircase> SpiralStaircase::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -7, 0), Vec3(5, 11, 5), orientation);
     if (!SpiralStaircase::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<SpiralStaircase>();
@@ -488,7 +488,7 @@ OwningNullable<SpiralStaircase> SpiralStaircase::create(std::vector<Piece*>& _pi
 }
 
 // see StrongholdGenerator.FiveWayCrossing constructor in StrongholdGenerator.java
-FiveWayCrossing::FiveWayCrossing(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+FiveWayCrossing::FiveWayCrossing(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
     lowerLeftExists = rand.nextBoolean();
     upperLeftExists = rand.nextBoolean();
@@ -496,7 +496,7 @@ FiveWayCrossing::FiveWayCrossing(const int& _chainLength, Random& rand, const Bl
     upperRightExists = rand.nextInt(3) > 0;// 66.666% chance
 }
 // see StrongholdGenerator.FiveWayCrossing.fillOpenings function in StrongholdGenerator.java
-void FiveWayCrossing::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void FiveWayCrossing::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "FiveWayCrossing.";
     // Piece::fillOpenings(start, _pieces, rand);
     int corner13heightOffset = 3;
@@ -516,7 +516,7 @@ void FiveWayCrossing::fillOpenings(StructurePiece& start, std::vector<Piece*>& _
         fillSEOpening(start, _pieces, rand, 7, corner24heightOffset);
 }
 // see StrongholdGenerator.FiveWayCrossing.create function in StrongholdGenerator.java
-OwningNullable<FiveWayCrossing> FiveWayCrossing::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<FiveWayCrossing> FiveWayCrossing::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-4, -3, 0), Vec3(10, 9, 11), orientation);
     if (!FiveWayCrossing::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<FiveWayCrossing>();
@@ -525,17 +525,17 @@ OwningNullable<FiveWayCrossing> FiveWayCrossing::create(std::vector<Piece*>& _pi
 }
 
 // see StrongholdGenerator.ChestCorridor constructor in StrongholdGenerator.java
-ChestCorridor::ChestCorridor(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+ChestCorridor::ChestCorridor(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
 }
 // see StrongholdGenerator.ChestCorridor.fillOpenings function in StrongholdGenerator.java
-void ChestCorridor::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void ChestCorridor::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "ChestCorridor.";
     // Piece::fillOpenings(start, _pieces, rand);
     fillForwardOpening(start, _pieces, rand, 1, 1);
 }
 // see StrongholdGenerator.ChestCorridor.create function in StrongholdGenerator.java
-OwningNullable<ChestCorridor> ChestCorridor::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<ChestCorridor> ChestCorridor::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(5, 5, 7), orientation);
     if (!ChestCorridor::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr))
         return OwningNullable<ChestCorridor>();
@@ -544,12 +544,12 @@ OwningNullable<ChestCorridor> ChestCorridor::create(std::vector<Piece*>& _pieces
 }
 
 // see StrongholdGenerator.Library constructor in StrongholdGenerator.java
-Library::Library(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
+Library::Library(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {
     entryDoor = getRandomEntrance(rand);
     isTall = (boundingBox.maxY - boundingBox.minY + 1) > 6;
 }
 // see StrongholdGenerator.Library.create function in StrongholdGenerator.java
-OwningNullable<Library> Library::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
+OwningNullable<Library> Library::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength) {
     BlockBox box = BlockBox::rotated(position, Vec3(-4, -1, 0), Vec3(14, 11, 15), orientation);
     if (!Library::isInBounds(box) || (getIntersecting(box, _pieces) != nullptr)) {
         box = BlockBox::rotated(position, Vec3(-4, -1, 0), Vec3(14, 6, 15), orientation);
@@ -563,7 +563,7 @@ OwningNullable<Library> Library::create(std::vector<Piece*>& _pieces, Random& ra
 // see StrongholdGenerator.PortalRoom constructor in StrongholdGenerator.java
 PortalRoom::PortalRoom(const int& _chainLength, const BlockBox& _boundingBox, const Direction& _orientation) : Piece(_chainLength, _boundingBox, _orientation) {}
 // see StrongholdGenerator.PortalRoom.fillOpenings function in StrongholdGenerator.java
-void PortalRoom::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand) {
+void PortalRoom::fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand) {
     // std::cout << "PortalRoom.";
     // Piece::fillOpenings(start, _pieces, rand);
     ((Start&)start).portalRoom = this;
@@ -581,7 +581,7 @@ SmallCorridor::SmallCorridor(const int& _chainLength, const BlockBox& _boundingB
     length = (orientation.direction.z != 0) ? (boundingBox.maxZ - boundingBox.minZ + 1) : (boundingBox.maxX - boundingBox.minX + 1);// blockCountZ if facing positive or negative z otherwise, blockCountX
 }
 // see StrongholdGenerator.SmallCorridor.create function in StrongholdGenerator.java
-OwningNullable<BlockBox> SmallCorridor::create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation) {
+OwningNullable<BlockBox> SmallCorridor::create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation) {
     BlockBox box = BlockBox::rotated(position, Vec3(-1, -1, 0), Vec3(5, 5, 4), orientation);
     BlockBox* intersectingBox = getIntersecting(box, _pieces);
     if (intersectingBox == nullptr) return OwningNullable<BlockBox>();
@@ -598,7 +598,7 @@ OwningNullable<BlockBox> SmallCorridor::create(std::vector<Piece*>& _pieces, Ran
 }
 
 // see StrongholdGenerator.Start constructor in StrongholdGenerator.java
-Start::Start(Random& rand, const Pos& position) : SpiralStaircase(0, position, getRandomHorizontalDirection(rand)) {
+Start::Start(LCG& rand, const Pos& position) : SpiralStaircase(0, position, getRandomHorizontalDirection(rand)) {
     boundingBox.color = "#00ff00";
     for (size_t i = 0; i < allPieces.size(); i++) {
         // std::cout << "populating possiblePieces with \"" << allPieceNames[allPieces[i].type] << "\"\n";
@@ -606,7 +606,7 @@ Start::Start(Random& rand, const Pos& position) : SpiralStaircase(0, position, g
     }
 }
 // see StrongholdGenerator.StoneBrickRandomizer.setBlock function in StrongholdGenerator.java
-void StoneBrickRandomizer::setBlock(Random& rand, const Pos& position, const bool& placeBlock) {
+void StoneBrickRandomizer::setBlock(LCG& rand, const Pos& position, const bool& placeBlock) {
     float $$5;
     if (placeBlock) {
         rand.nextSeed();
@@ -657,7 +657,7 @@ void shift(std::vector<Piece*>& pieces, const int& yAmount) {
     for (size_t i = 0; i < pieces.size(); i++) pieces[i]->boundingBox.moveY(yAmount);
 }
 // see StructurePiecesCollector.shiftInto function in StructurePiecesCollector.java
-void shiftInto(std::vector<Piece*>& pieces, const int& topY, const int& bottomY, Random& rand, const int& topPenalty) {
+void shiftInto(std::vector<Piece*>& pieces, const int& topY, const int& bottomY, LCG& rand, const int& topPenalty) {
     int preferedTop = topY - topPenalty;
     BlockBox boundingBox = getBoundingBox(pieces);
     int yLevel = boundingBox.getBlockCountY() + bottomY + 1;
@@ -670,7 +670,7 @@ void shiftInto(std::vector<Piece*>& pieces, const int& topY, const int& bottomY,
 // see StructurePlacementCalculator.calculateConcentricsRingPlacementPos function in StructurePlacementCalculator.java
 OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const ChunkPos& chunk, const bool& debug) {
     std::vector<Piece*> pieces;
-    Random rand(worldSeed);
+    LCG rand(worldSeed);
     Start* start = nullptr;
     int i = 0;
     bool firstRun = true;

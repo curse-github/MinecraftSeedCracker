@@ -6,6 +6,7 @@
 #include "Lib.h"
 
 struct ChunkPos;
+struct BiomePos;
 struct Pos : public Vec3 {
     Pos() : Vec3() {
     }
@@ -22,6 +23,10 @@ struct Pos : public Vec3 {
         return Pos(x + rhs.x, y + rhs.y, z + rhs.z);
     }
     ChunkPos getChunkPos() const;
+    Pos getOffsetPos(Pos offset) const;
+    BiomePos getBiomePos() const;
+    Vec3 toVec3() const;
+    Vec3D toVec3D() const;
 };
 // see ChunkPos class in ChunkPos.java
 struct ChunkPos : public Vec2 {
@@ -38,6 +43,21 @@ struct ChunkPos : public Vec2 {
     ChunkPos& operator=(ChunkPos&& move);
     Pos getBlockPos() const;
     Pos getOffsetPos(Pos offset) const;
+};
+// see BiomePos class in BiomePos.java
+struct BiomePos : public Vec2 {
+    BiomePos() : Vec2(0, 0) {
+    }
+    BiomePos(const int& _x, const int& _z) : Vec2(_x, _z) {
+    }
+    BiomePos(const Vec2& copy) : Vec2(copy.x, copy.z) {
+    }
+    BiomePos(const BiomePos& copy) : Vec2(copy.x, copy.z) {
+    }
+    ~BiomePos() {};
+    BiomePos& operator=(const BiomePos& copy);
+    BiomePos& operator=(BiomePos&& move);
+    Pos getBlockPos() const;
 };
 
 // see Direction class in Direction.java

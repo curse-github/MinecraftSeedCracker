@@ -46,13 +46,16 @@ void printBlockBoxes(const Pos& entrance, const std::vector<BlockBox>& boxes, co
     std::cout << "calculator.setExpression({id:'graph" << (boxes.size() + 3) << "', latex:'(" << actualPos.x << "," << -actualPos.z << ")',label:'Actual Portal Room',showLabel: true,color:'#ff00ff',pointSize:'16',pointStyle:'CROSS'});\n\n";
 }
 
-const long long int worldSeed = 56871783007ull;
+const long long int worldSeed = 783773578799911111ull;
 const bool constantPosition = true;
 int main(int argc, char** argv) {
-    testRand(worldSeed);
+    //initBiomes(worldSeed);
+    // getBiome(Pos(852, 0, -200));
+    // return 0;
+    testRand(56871783007ll);
     if (constantPosition) {
         // can be found @ https://www.chunkbase.com/apps/stronghold-finder
-        const Pos startPos = Pos(11380, 0, -8108);
+        const Pos startPos = Pos(1588, 0, 292);
         ChunkPos startChunkPos = (startPos + Pos(-4, 0, -4)).getChunkPos();
         OwningNullable<StartEndBoxes> strongholdDataOwner = getPortalRoomPosition(worldSeed, startChunkPos, true);
         StartEndBoxes& strongholdData = strongholdDataOwner.getValue();
@@ -62,25 +65,17 @@ int main(int argc, char** argv) {
         printBlockBoxes(strongholdData.start, strongholdData.boxes, strongholdData.end, Pos(0, 0, 0));*/
         std::cout << "entrance pos: /tp " << strongholdData.start.x << " " << strongholdData.start.y << " " << strongholdData.start.z << "\n";
         std::cout << "portal pos: /tp " << strongholdData.end.x << " " << strongholdData.end.y << " " << strongholdData.end.z << "\n";
-        // checkIntersections(strongholdData.boxes);
     } else {
         std::vector<ChunkPos> strongholdPositions = Finder().concentricRings(worldSeed);
         // printPositions(strongholdPositions);
-        for (size_t i = 0; i < strongholdPositions.size(); i++) {
+        /*for (size_t i = 0; i < strongholdPositions.size(); i++) {
             OwningNullable<StartEndBoxes> strongholdDataOwner = getPortalRoomPosition(worldSeed, strongholdPositions[i]);
             StartEndBoxes& strongholdData = strongholdDataOwner.getValue();
             std::cout << "portal#" << (i+1) << "\n";
             std::cout << "    entrance pos: /tp " << strongholdData.start.x << " " << strongholdData.start.y << " " << strongholdData.start.z << "\n";
             std::cout << "    portal pos: /tp " << strongholdData.end.x << " " << strongholdData.end.y << " " << strongholdData.end.z << "\n";
-        }
+        }*/
     }
-    /*Random zero(25214903917ull);
-    std::cout << "-1: " << (zero.previousSeed() ^ 25214903917ull) << '\n';
-    std::cout << "-2: " << (zero.previousSeed() ^ 25214903917ull) << '\n';
-    std::cout << "-3: " << (zero.previousSeed() ^ 25214903917ull) << '\n';
-    std::cout << "-4: " << (zero.previousSeed() ^ 25214903917ull) << '\n';
-    std::cout << "-5: " << (zero.previousSeed() ^ 25214903917ull) << '\n';
-    std::cout << "-6: " << (zero.previousSeed() ^ 25214903917ull) << '\n';*/
     // solve12Eye();
     return 0;
 }

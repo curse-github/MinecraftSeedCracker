@@ -1,8 +1,3 @@
-
-
-//  ChunkGenerator.generateFeatures() function in ChunkGenerator.java
-//  StructureStart.place() function in StructureStart.java
-//      StructureStart.generate() function in StructureStart.java
 #ifndef __STRONGHOLD_STRUCTURE
 #define __STRONGHOLD_STRUCTURE
 
@@ -51,7 +46,7 @@ enum EntranceType {
     GRATES,
     IRON_DOOR
 };
-EntranceType getRandomEntrance(Random& rand);
+EntranceType getRandomEntrance(LCG& rand);
 
 #pragma region structs
 struct Piece;
@@ -66,9 +61,9 @@ struct StructurePiece {
     virtual ~StructurePiece() {};
     StructurePiece& operator=(const StructurePiece& copy) = delete;
     StructurePiece& operator=(StructurePiece&& move) = delete;
-    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
+    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
 };
-NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 // see StrongholdGenerator.Piece class in StrongholdGenerator.java
 struct Piece : public StructurePiece{
     EntranceType entryDoor = EntranceType::OPENING;
@@ -78,35 +73,35 @@ struct Piece : public StructurePiece{
     virtual ~Piece() {};
     Piece& operator=(const Piece& copy) = delete;
     Piece& operator=(Piece&& move) = delete;
-    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    NonOwningNullable<StructurePiece> fillForwardOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset);
-    NonOwningNullable<StructurePiece> fillNWOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset);
-    NonOwningNullable<StructurePiece> fillSEOpening(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const int& leftRightOffset, const int& heightOffset);
+    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    NonOwningNullable<StructurePiece> fillForwardOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset);
+    NonOwningNullable<StructurePiece> fillNWOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset);
+    NonOwningNullable<StructurePiece> fillSEOpening(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const int& leftRightOffset, const int& heightOffset);
     static bool isInBounds(BlockBox boundingBox);
 };
 // see StrongholdGenerator.Corridor class in StrongholdGenerator.java
 struct Corridor : public Piece {
     bool leftExitExists;
     bool rightExitExists;
-    Corridor(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    Corridor(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     Corridor(const Corridor& copy) = delete;
     Corridor(Corridor&& move) = delete;
     ~Corridor() {};
     Corridor& operator=(const Corridor& copy) = delete;
     Corridor& operator=(Corridor&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<Corridor> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<Corridor> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.PrisonHall class in StrongholdGenerator.java
 struct PrisonHall : public Piece {
-    PrisonHall(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    PrisonHall(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     PrisonHall(const PrisonHall& copy) = delete;
     PrisonHall(PrisonHall&& move) = delete;
     ~PrisonHall() {};
     PrisonHall& operator=(const PrisonHall& copy) = delete;
     PrisonHall& operator=(PrisonHall&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<PrisonHall> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<PrisonHall> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.Turn class in StrongholdGenerator.java
 struct Turn : public Piece {
@@ -117,65 +112,65 @@ struct Turn : public Piece {
     virtual ~Turn() {};
     Turn& operator=(const Turn& copy) = delete;
     Turn& operator=(Turn&& move) = delete;
-    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
+    virtual void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
 };
 // see StrongholdGenerator.LeftTurn class in StrongholdGenerator.java
 struct LeftTurn : public Turn {
-    LeftTurn(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    LeftTurn(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     LeftTurn(const LeftTurn& copy) = delete;
     LeftTurn(LeftTurn&& move) = delete;
     ~LeftTurn() {};
     LeftTurn& operator=(const LeftTurn& copy) = delete;
     LeftTurn& operator=(LeftTurn&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<LeftTurn> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<LeftTurn> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.RightTurn class in StrongholdGenerator.java
 struct RightTurn : public Turn {
-    RightTurn(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    RightTurn(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     RightTurn(const RightTurn& copy) = delete;
     RightTurn(RightTurn&& move) = delete;
     ~RightTurn() {};
     RightTurn& operator=(const RightTurn& copy) = delete;
     RightTurn& operator=(RightTurn&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<RightTurn> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<RightTurn> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.SquareRoom class in StrongholdGenerator.java
 struct SquareRoom : public Piece {
     int roomType;
-    SquareRoom(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    SquareRoom(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     SquareRoom(const SquareRoom& copy) = delete;
     SquareRoom(SquareRoom&& move) = delete;
     ~SquareRoom() {};
     SquareRoom& operator=(const SquareRoom& copy) = delete;
     SquareRoom& operator=(SquareRoom&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<SquareRoom> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<SquareRoom> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.Stairs class in StrongholdGenerator.java
 struct Stairs : public Piece {
-    Stairs(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    Stairs(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     Stairs(const Stairs& copy) = delete;
     Stairs(Stairs&& move) = delete;
     ~Stairs() {};
     Stairs& operator=(const Stairs& copy) = delete;
     Stairs& operator=(Stairs&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<Stairs> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<Stairs> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.SpiralStaircase class in StrongholdGenerator.java
 struct SpiralStaircase : public Piece {
     const bool isStart;
     SpiralStaircase(const int& _chainLength, const Pos& position, const Direction& _orientation);
-    SpiralStaircase(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    SpiralStaircase(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     SpiralStaircase(const SpiralStaircase& copy) = delete;
     SpiralStaircase(SpiralStaircase&& move) = delete;
     ~SpiralStaircase() {};
     SpiralStaircase& operator=(const SpiralStaircase& copy) = delete;
     SpiralStaircase& operator=(SpiralStaircase&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<SpiralStaircase> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<SpiralStaircase> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.FiveWayCrossing class in StrongholdGenerator.java
 struct FiveWayCrossing : public Piece {
@@ -183,36 +178,36 @@ struct FiveWayCrossing : public Piece {
     bool upperLeftExists;
     bool lowerRightExists;
     bool upperRightExists;
-    FiveWayCrossing(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    FiveWayCrossing(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     FiveWayCrossing(const FiveWayCrossing& copy) = delete;
     FiveWayCrossing(FiveWayCrossing&& move) = delete;
     ~FiveWayCrossing() {};
     FiveWayCrossing& operator=(const FiveWayCrossing& copy) = delete;
     FiveWayCrossing& operator=(FiveWayCrossing&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<FiveWayCrossing> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<FiveWayCrossing> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.ChestCorridor class in StrongholdGenerator.java
 struct ChestCorridor : public Piece {
-    ChestCorridor(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    ChestCorridor(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     ChestCorridor(const ChestCorridor& copy) = delete;
     ChestCorridor(ChestCorridor&& move) = delete;
     ~ChestCorridor() {};
     ChestCorridor& operator=(const ChestCorridor& copy) = delete;
     ChestCorridor& operator=(ChestCorridor&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
-    static OwningNullable<ChestCorridor> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
+    static OwningNullable<ChestCorridor> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.Library class in StrongholdGenerator.java
 struct Library : public Piece {
     bool isTall;
-    Library(const int& _chainLength, Random& rand, const BlockBox& _boundingBox, const Direction& _orientation);
+    Library(const int& _chainLength, LCG& rand, const BlockBox& _boundingBox, const Direction& _orientation);
     Library(const Library& copy) = delete;
     Library(Library&& move) = delete;
     ~Library() {};
     Library& operator=(const Library& copy) = delete;
     Library& operator=(Library&& move) = delete;
-    static OwningNullable<Library> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+    static OwningNullable<Library> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.PortalRoom class in StrongholdGenerator.java
 struct PortalRoom : public Piece {
@@ -223,7 +218,7 @@ struct PortalRoom : public Piece {
     ~PortalRoom() {};
     PortalRoom& operator=(const PortalRoom& copy) = delete;
     PortalRoom& operator=(PortalRoom&& move) = delete;
-    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand);
+    void fillOpenings(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand);
     static OwningNullable<PortalRoom> create(std::vector<Piece*>& _pieces, const Pos& position, const Direction& orientation, const int& chainLength);
 };
 // see StrongholdGenerator.SmallCorridor class in StrongholdGenerator.java
@@ -235,7 +230,7 @@ struct SmallCorridor : public Piece {
     ~SmallCorridor() {};
     SmallCorridor& operator=(const SmallCorridor& copy) = delete;
     SmallCorridor& operator=(SmallCorridor&& move) = delete;
-    static OwningNullable<BlockBox> create(std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation);
+    static OwningNullable<BlockBox> create(std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation);
 };
 // see StrongholdGenerator.Start class in StrongholdGenerator.java
 struct Start : public SpiralStaircase {
@@ -243,12 +238,12 @@ struct Start : public SpiralStaircase {
     std::vector<Piece*> pieces;
     unsigned int lastPiece = PieceTypeNone;
     std::vector<PieceData> possiblePieces;
-    Start(Random& rand, const Pos& position);
+    Start(LCG& rand, const Pos& position);
 };
 // see StructurePiece.BlockRandomizer class in StructurePiece.java
 struct BlockRandomizer {
     // Block block = Blocks.AIR.getDefaultState();
-    virtual void setBlock(Random& rand, const Pos& position, const bool& placeBlock);
+    virtual void setBlock(LCG& rand, const Pos& position, const bool& placeBlock);
 };
 // see StrongholdGenerator.StoneBrickRandomizer class in StrongholdGenerator.java
 struct StoneBrickRandomizer : public BlockRandomizer {
@@ -256,14 +251,14 @@ struct StoneBrickRandomizer : public BlockRandomizer {
     StoneBrickRandomizer() {
         StoneBrickRandomizer::singleton = this;
     }
-    void setBlock(Random& rand, const Pos& position, const bool& placeBlock);
+    void setBlock(LCG& rand, const Pos& position, const bool& placeBlock);
 };
 #pragma endregion structs
 
 BlockBox* getIntersecting(const BlockBox& box, const std::vector<Piece*>& _pieces);
-OwningNullable<Piece> createPiece(const unsigned int& pieceType, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, Direction orientation, int chainLength);
-OwningNullable<Piece> pickPiece(Start& start, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, Direction orientation, int chainLength);
-NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, Random& rand, const Pos& position, const Direction& orientation, const int& chainLength);
+OwningNullable<Piece> createPiece(const unsigned int& pieceType, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, Direction orientation, int chainLength);
+OwningNullable<Piece> pickPiece(Start& start, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, Direction orientation, int chainLength);
+NonOwningNullable<StructurePiece> generatePiece(StructurePiece& start, std::vector<Piece*>& _pieces, LCG& rand, const Pos& position, const Direction& orientation, const int& chainLength);
 
 struct StartEndBoxes {
     Pos start;

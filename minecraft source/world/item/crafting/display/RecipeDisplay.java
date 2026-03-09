@@ -1,0 +1,74 @@
+/*    */ package net.minecraft.world.item.crafting.display;
+/*    */ 
+/*    */ import com.mojang.serialization.Codec;
+/*    */ import com.mojang.serialization.MapCodec;
+/*    */ import net.minecraft.core.registries.BuiltInRegistries;
+/*    */ import net.minecraft.core.registries.Registries;
+/*    */ import net.minecraft.network.RegistryFriendlyByteBuf;
+/*    */ import net.minecraft.network.codec.ByteBufCodecs;
+/*    */ import net.minecraft.network.codec.StreamCodec;
+/*    */ import net.minecraft.world.flag.FeatureFlagSet;
+/*    */ 
+/*    */ public interface RecipeDisplay
+/*    */ {
+/* 14 */   public static final Codec<RecipeDisplay> CODEC = BuiltInRegistries.RECIPE_DISPLAY.byNameCodec().dispatch(RecipeDisplay::type, Type::codec);
+/* 15 */   public static final StreamCodec<RegistryFriendlyByteBuf, RecipeDisplay> STREAM_CODEC = ByteBufCodecs.registry(Registries.RECIPE_DISPLAY).dispatch(RecipeDisplay::type, Type::streamCodec);
+/*    */ 
+/*    */   
+/*    */   SlotDisplay result();
+/*    */ 
+/*    */   
+/*    */   SlotDisplay craftingStation();
+/*    */   
+/*    */   Type<? extends RecipeDisplay> type();
+/*    */   
+/* 25 */   default boolean isEnabled(FeatureFlagSet enabledFeatures) { return (result().isEnabled(enabledFeatures) && craftingStation().isEnabled(enabledFeatures)); }
+/*    */   public static final class Type<T extends RecipeDisplay> extends Record { private final MapCodec<T> codec; private final StreamCodec<RegistryFriendlyByteBuf, T> streamCodec;
+/*    */     
+/* 28 */     public Type(MapCodec<T> codec, StreamCodec<RegistryFriendlyByteBuf, T> streamCodec) { this.codec = codec; this.streamCodec = streamCodec; } public final String toString() { // Byte code:
+/*    */       //   0: aload_0
+/*    */       //   1: <illegal opcode> toString : (Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;)Ljava/lang/String;
+/*    */       //   6: areturn
+/*    */       // Line number table:
+/*    */       //   Java source line number -> byte code offset
+/*    */       //   #28	-> 0
+/*    */       // Local variable table:
+/*    */       //   start	length	slot	name	descriptor
+/*    */       //   0	7	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;
+/*    */       // Local variable type table:
+/*    */       //   start	length	slot	name	signature
+/* 28 */       //   0	7	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type<TT;>; } public MapCodec<T> codec() { return this.codec; } public final int hashCode() { // Byte code:
+/*    */       //   0: aload_0
+/*    */       //   1: <illegal opcode> hashCode : (Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;)I
+/*    */       //   6: ireturn
+/*    */       // Line number table:
+/*    */       //   Java source line number -> byte code offset
+/*    */       //   #28	-> 0
+/*    */       // Local variable table:
+/*    */       //   start	length	slot	name	descriptor
+/*    */       //   0	7	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;
+/*    */       // Local variable type table:
+/*    */       //   start	length	slot	name	signature
+/*    */       //   0	7	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type<TT;>; } public final boolean equals(Object o) { // Byte code:
+/*    */       //   0: aload_0
+/*    */       //   1: aload_1
+/*    */       //   2: <illegal opcode> equals : (Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;Ljava/lang/Object;)Z
+/*    */       //   7: ireturn
+/*    */       // Line number table:
+/*    */       //   Java source line number -> byte code offset
+/*    */       //   #28	-> 0
+/*    */       // Local variable table:
+/*    */       //   start	length	slot	name	descriptor
+/*    */       //   0	8	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type;
+/*    */       //   0	8	1	o	Ljava/lang/Object;
+/*    */       // Local variable type table:
+/*    */       //   start	length	slot	name	signature
+/* 28 */       //   0	8	0	this	Lnet/minecraft/world/item/crafting/display/RecipeDisplay$Type<TT;>; } public StreamCodec<RegistryFriendlyByteBuf, T> streamCodec() { return this.streamCodec; } }
+/*    */ 
+/*    */ }
+
+
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\world\item\crafting\display\RecipeDisplay.class
+ * Java compiler version: 21 (65.0)
+ * JD-Core Version:       1.0.7
+ */

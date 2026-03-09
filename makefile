@@ -16,6 +16,12 @@ makeTmp:
 	$(O_BUILD) ./tmp/StrongholdStructure.o -c ./src/StrongholdStructure.cpp
 ./tmp/RandomSolver.o: makeTmp ./src/RandomSolver.cpp
 	$(O_BUILD) ./tmp/RandomSolver.o -c ./src/RandomSolver.cpp
+./tmp/Biome.o: makeTmp ./src/Biome.cpp
+	$(O_BUILD) ./tmp/Biome.o -c ./src/Biome.cpp
+./tmp/Noise.o: makeTmp ./src/Noise.cpp
+	$(O_BUILD) ./tmp/Noise.o -c ./src/Noise.cpp
+./tmp/md5.o: makeTmp ./src/md5.cpp
+	$(O_BUILD) ./tmp/md5.o -c ./src/md5.cpp
 
 ./tmp/Lib.a: makeTmp ./tmp/Lib.o
 	$(LIB_BUILD) ./tmp/Lib.a ./tmp/Lib.o
@@ -29,6 +35,12 @@ makeTmp:
 	$(LIB_BUILD) ./tmp/StrongholdStructure.a ./tmp/StrongholdStructure.o
 ./tmp/RandomSolver.a: makeTmp ./tmp/RandomSolver.o
 	$(LIB_BUILD) ./tmp/RandomSolver.a ./tmp/RandomSolver.o
+./tmp/Biome.a: makeTmp ./tmp/Biome.o
+	$(LIB_BUILD) ./tmp/Biome.a ./tmp/Biome.o
+./tmp/Noise.a: makeTmp ./tmp/Noise.o
+	$(LIB_BUILD) ./tmp/Noise.a ./tmp/Noise.o
+./tmp/md5.a: makeTmp ./tmp/md5.o
+	$(LIB_BUILD) ./tmp/md5.a ./tmp/md5.o
 
-main.exe: ./src/main.cpp ./tmp/Lib.a ./tmp/MinecraftLib.a ./tmp/Random.a ./tmp/Finder.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a
-	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/Random.a ./tmp/Finder.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Lib.a
+main.exe: ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/Finder.a ./tmp/Biome.a ./tmp/Noise.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/md5.a
+	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/Finder.a ./tmp/Biome.a ./tmp/Noise.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/md5.a

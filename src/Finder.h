@@ -2,11 +2,14 @@
 #define __FINDER
 
 #include <vector>
+#include <string>
 #include <cmath>
 #include "MinecraftLib.h"
 #include "Random.h"
+#include "Biome.h"
 #include "Lib.h"
 
+OwningNullable<Pos> locateBiome(const Pos& pos, const int& radius, const std::vector<std::string>& predicate, LCG& rand);
 class Finder {
     public:
     Finder() {}

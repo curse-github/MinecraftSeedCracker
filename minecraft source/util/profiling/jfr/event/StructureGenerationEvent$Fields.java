@@ -1,0 +1,19 @@
+package net.minecraft.util.profiling.jfr.event;
+
+public interface Fields {
+  public static final String CHUNK_POS_X = "chunkPosX";
+  
+  public static final String CHUNK_POS_Z = "chunkPosZ";
+  
+  public static final String STRUCTURE = "structure";
+  
+  public static final String LEVEL = "level";
+  
+  public static final String SUCCESS = "success";
+}
+
+
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraf\\util\profiling\jfr\event\StructureGenerationEvent$Fields.class
+ * Java compiler version: 21 (65.0)
+ * JD-Core Version:       1.0.7
+ */
