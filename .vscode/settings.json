@@ -65,5 +65,6 @@
         "xlocmon": "cpp",
         "xloctime": "cpp",
         "random": "cpp"
-    }
+    },
+    "java.format.settings.url": "eclipse-formatter.xml"
 }

@@ -25,7 +25,7 @@
 /*    */ }
 
 
-/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\core\BlockBox$1.class
+/* Location:              C:\Users\Curse\Desktop\servers\test\versions\1.21.11_unobfuscated\server-1.21.11_unobfuscated.jar!\net\minecraft\core\BlockBox.class
  * Java compiler version: 21 (65.0)
  * JD-Core Version:       1.0.7
  */

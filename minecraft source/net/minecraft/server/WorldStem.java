@@ -33,7 +33,8 @@
 /*    */     // Local variable table:
 /*    */     //   start	length	slot	name	descriptor
 /*    */     //   0	8	0	this	Lnet/minecraft/server/WorldStem;
-/*  7 */     //   0	8	1	o	Ljava/lang/Object; } public ReloadableServerResources dataPackResources() { return this.dataPackResources; } public LayeredRegistryAccess<RegistryLayer> registries() { return this.registries; } public WorldData worldData() { return this.worldData; }
+/*  7 */     //   0	8	1	o	Ljava/lang/Object; } public ReloadableServerResources dataPackResources() { return this.dataPackResources; } public LayeredRegistryAccess<RegistryLayer> registries() { return this.registries; }
+//                public WorldData worldData() { return this.worldData; }
 /*    */ 
 /*    */ 
 /*    */ 

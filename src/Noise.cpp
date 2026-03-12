@@ -55,10 +55,10 @@ double YClampedGradient::sample(const Vec3D& pos) const {
     return fromValue + ((pos.y - fromY)/(toY - fromY)*(toValue - fromValue));
 }
 double YClampedGradient::getMaxValue() const {
-    return myMax(fromValue, toValue);
+    return std::max(fromValue, toValue);
 }
 double YClampedGradient::getMinValue() const {
-    return myMin(fromValue, toValue);
+    return std::min(fromValue, toValue);
 }
 Added::Added(const Sampleable& _noise1, const Sampleable& _noise2) : noise1(_noise1), noise2(_noise2) {}
 double Added::sample(const Vec3D& pos) const {

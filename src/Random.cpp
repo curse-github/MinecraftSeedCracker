@@ -54,38 +54,45 @@ const unsigned long long int rand_seed_neg_9 = 158745686432556ull;
 long long int Random::next() {
     return nextSeed();
 }
-// see implementation of BaseRandom.nextInt() in BaseRandom
+// see implementation of BitRandomSource.nextInt() in BitRandomSource
 int Random::nextInt() {
     return static_cast<int>(next(32));
 }
-// see implementation of BaseRandom.nextInt(int bound) in BaseRandom
+// see implementation of BitRandomSource.nextInt(int bound) in BitRandomSource
 int Random::nextInt(const unsigned int& bound) {
-    if ((bound & (bound - 1)) == 0) return (int)((long long int)bound * (long long int)next(31) >> 31);
-    int _1 = 0;
-    int _2 = 0;
-    while (((_1 = next(31)) - (_2 = (_1 % bound)) + (bound - 1)) < 0) {}
-    return _2;
+    int modulo = 0;
+    int sample = 0;
+    if ((bound & (bound - 1)) == 0) return (int)((bound * next(31)) >> 31);
+    do {
+        sample = (int)next(31);
+        modulo = sample % bound;
+    } while ((sample - modulo + (bound - 1)) < 0);
+    return modulo;
 }
-// see implementation of BaseRandom.nextLong() in BaseRandom
+// see implementation of BitRandomSource.nextLong() in BitRandomSource
 long long int Random::nextLong() {
-    return (((long long int)(int)next(32)) << 32ull) + ((long long int)(int)next(32));
+    int upper = next(32);
+    int lower = next(32);
+    return ((long long int)upper << 32ull) + lower;
 }
-// see implementation of BaseRandom.nextBoolean() in BaseRandom
+// see implementation of BitRandomSource.nextBoolean() in BitRandomSource
 bool Random::nextBoolean() {
     return next(1) != 0;
 }
-// see implementation of BaseRandom.nextFloat() in BaseRandom
+// see implementation of BitRandomSource.nextFloat() in BitRandomSource
 float Random::nextFloat() {
-    return (float)next(24) * 5.9604645E-8f;
+    return next(24) * 5.9604645E-8f;
 }
-// see implementation of BaseRandom.nextDouble() in BaseRandom
+// see implementation of BitRandomSource.nextDouble() in BitRandomSource
 double Random::nextDouble() {
-    return (double)(((long long int)next(26) << 27) + ((long long int)next(27))) * 1.110223E-16;
+    return (((unsigned long long int)next(26) << 27ll) + (unsigned long long int)next(27)) * 1.1102230246251565E-16;
 }
 // see ChunkRandom.setCarverSeed function in ChunkRandom.java
 long long int Random::getCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
     LCG rand(worldSeed);
-    return ((long long int)chunkX * rand.nextLong()) ^ ((long long int)chunkZ * rand.nextLong()) ^ worldSeed;
+    long long int xScale = rand.nextLong();
+    long long int zScale = rand.nextLong();
+    return (chunkX * xScale) ^ (chunkZ * zScale) ^ worldSeed;
 }
 long long int Random::getCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
     return getCarverSeed(worldSeed, chunk.x, chunk.z);
@@ -96,21 +103,16 @@ Direction getRandomHorizontalDirection(Random& rand) {
 }
 
 #pragma region LCG
-LCG& LCG::operator=(const LCG& copy) {
-    a = copy.a;
-    inv_a = copy.inv_a;
-    b = copy.b;
-    m = copy.m;
-    seed = copy.seed;
-    return *this;
-}
 void LCG::setSeed(const long long int& _seed) {
+    count = 0;
     seed = (_seed ^ a) & (m - 1);
 }
 // see ChunkRandom.setCarverSeed function in ChunkRandom.java
 void LCG::setCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
     setSeed(worldSeed);
-    setSeed(((long long int)chunkX * nextLong()) ^ ((long long int)chunkZ * nextLong()) ^ worldSeed);
+    long long int xScale = nextLong();
+    long long int zScale = nextLong();
+    setSeed((chunkX * xScale) ^ (chunkZ * zScale) ^ worldSeed);
 }
 void LCG::setCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
     setCarverSeed(worldSeed, chunk.x, chunk.z);
@@ -120,6 +122,7 @@ long long int LCG::next(const unsigned int& bits) {
     return nextSeed() >> (48 - bits);
 }
 long long int LCG::currentSeed() {
+    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // new_seed = ((a * seed) + b) % m
@@ -127,6 +130,8 @@ long long int LCG::nextSeed() {
     seed *= a;
     seed += b;
     seed &= m-1;
+    count++;
+    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // new_seed = ((a * seed) + b) % m
@@ -154,6 +159,8 @@ long long int LCG::nextSeed(const unsigned int& steps) {
     seed *= fastExp(a, steps);
     seed += b * geom(a, steps);
     seed &= m - 1;
+    count += steps;
+    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // seed = ((a * old_seed) + b) % m
@@ -164,6 +171,8 @@ long long int LCG::previousSeed() {
     seed -= b;
     seed *= inv_a;
     seed &= m-1;
+    count--;
+    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // old_seed = (seed - b) * inv_a % m
@@ -180,6 +189,8 @@ long long int LCG::previousSeed(const unsigned int& steps) {
     seed -= b * geom(a, steps);
     seed *= fastExp(inv_a, steps);
     seed &= m-1;
+    count -= steps;
+    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // see implementation of CheckedRandom.split() in CheckedRandom.java
@@ -326,98 +337,154 @@ Xoroshiro XoroshiroSplitter::split(const long long int& seed) {
 #pragma endregion Xoroshiro
 
 
-// used https://onecompiler.com/java/43q7xtnkm to get values and the following code
+// used https://onecompiler.com/java to get values and the following code
 /*
 import java.util.Scanner;
-import java.util.LCG;
-
+import java.util.Random;
 public class RandomNumbers {
-    public static void main(String[] args) {
-        int num = 30;
-        long world_seed = 56871783007L;
-        LCG random = new LCG();
-        random.setSeed(world_seed);
-        long carver_seed = ((long)15 * random.nextLong()) ^ ((long)15 * random.nextLong()) ^ world_seed;
-        random.setSeed(carver_seed);
-        long carver_carver_seed = ((long)15 * random.nextLong()) ^ ((long)15 * random.nextLong()) ^ carver_seed;
-        random.setSeed(world_seed);
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(5) + ",");
-        random.setSeed(world_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(4) + ",");
-        random.setSeed(world_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(2) == 0) + ",");
-        random.setSeed(world_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextBoolean() + ",");
-        random.setSeed(world_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(3) > 0) + ",");
-        random.setSeed(carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(5) + ",");
-        random.setSeed(carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(4) + ",");
-        random.setSeed(carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(2) == 0) + ",");
-        random.setSeed(carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextBoolean() + ",");
-        random.setSeed(carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(3) > 0) + ",");
-        random.setSeed(carver_carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(5) + ",");
-        random.setSeed(carver_carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextInt(4) + ",");
-        random.setSeed(carver_carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(2) == 0) + ",");
-        random.setSeed(carver_carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print(random.nextBoolean() + ",");
-        random.setSeed(carver_carver_seed);
-        System.out.println("");
-        for (int i = 0; i < num; i++)
-            System.out.print((random.nextInt(3) > 0) + ",");
-    }
+  public static void main(String[] args) {
+    int num = 30;
+    long world_seed = 8606738414634885904L;
+    Random random = new Random();
+    random.setSeed(world_seed);
+    long carver_seed = ((long)15 * random.nextLong()) ^ ((long)15 * random.nextLong()) ^ world_seed;
+    random.setSeed(carver_seed);
+    long carver_carver_seed = ((long)15 * random.nextLong()) ^ ((long)15 * random.nextLong()) ^ carver_seed;
+    System.out.println("world_seed: " + world_seed);
+    System.out.println("carver_seed: " + carver_seed);
+    System.out.println("carver_carver_seed: " + carver_carver_seed);
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(5) + ",");
+    System.out.println("");
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(4) + ",");
+    System.out.println("");
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(2) == 0) + ",");
+    System.out.println("");
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextBoolean() + ",");
+    System.out.println("");
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(3) > 0) + ",");
+    System.out.println("");
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(145) + ",");
+    System.out.println("");
+
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(5) + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(4) + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(2) == 0) + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextBoolean() + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(3) > 0) + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(145) + ",");
+    System.out.println("");
+
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(5) + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(4) + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(2) == 0) + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextBoolean() + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print((random.nextInt(3) > 0) + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextInt(145) + ",");
+    System.out.println("");
+    
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextDouble() + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextDouble() + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextDouble() + ",");
+    System.out.println("");
+    
+    random.setSeed(world_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextLong() + ",");
+    System.out.println("");
+    random.setSeed(carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextLong() + ",");
+    System.out.println("");
+    random.setSeed(carver_carver_seed);
+    for (int i = 0; i < num; i++)
+        System.out.print(random.nextLong() + ",");
+    System.out.println("");
+  }
 }
 */
-const int testValues[450] = {
-    1,4,0,0,0,3,1,1,2,0,0,0,4,4,3,3,2,3,0,4,1,2,4,1,4,0,2,3,4,3,
-    2,2,1,2,0,1,1,3,2,0,1,0,0,2,1,3,0,1,0,2,1,1,1,3,2,3,0,2,1,0,
-    false,false,true,false,true,true,true,false,false,true,true,true,true,false,true,false,true,true,true,false,true,true,true,false,false,false,true,false,true,true,
-    true,true,false,true,false,false,false,true,true,false,false,false,false,true,false,true,false,false,false,true,false,false,false,true,true,true,false,true,false,false,
-    true,true,true,true,true,true,false,true,true,true,true,true,false,true,false,true,false,false,true,true,true,false,true,true,true,false,true,true,false,true,
-    4,0,3,2,0,2,3,2,3,0,2,0,4,3,4,0,4,1,0,1,1,2,3,1,3,0,3,2,0,2,
-    3,0,0,0,1,1,0,0,1,0,3,1,0,0,0,0,1,1,2,0,0,0,3,0,2,0,3,0,0,3,
-    false,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,false,true,true,false,
-    true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,true,false,true,false,true,false,false,true,
-    true,true,false,true,false,true,true,true,true,true,false,true,true,true,false,true,true,true,true,false,true,false,true,true,true,true,true,true,true,true,
-    2,1,2,3,3,3,4,0,0,1,0,1,3,3,1,2,3,3,3,0,4,4,3,3,0,0,0,0,0,0,
-    0,2,0,0,1,0,0,0,0,0,0,2,0,3,1,1,3,2,3,1,3,0,3,2,2,1,3,0,1,1,
-    true,false,true,true,true,true,true,true,true,true,true,false,true,false,true,true,false,false,false,true,false,true,false,false,false,true,false,true,true,true,
-    false,true,false,false,false,false,false,false,false,false,false,true,false,true,false,false,true,true,true,false,true,false,true,true,true,false,true,false,false,false,
-    false,true,false,true,true,true,true,true,true,false,false,true,false,false,false,true,true,true,true,true,true,true,true,true,false,true,false,true,true,true
+const int testValues[540] = {
+    1,2,4,0,1,0,4,3,2,4,1,3,4,0,1,4,4,2,2,4,1,2,0,2,3,1,3,1,0,4,
+    0,2,1,2,1,1,3,1,0,3,3,2,3,3,1,1,1,0,3,0,2,1,1,3,3,1,1,3,3,1,
+    true,false,true,false,true,true,false,true,true,false,false,false,false,false,true,true,true,true,false,true,false,true,true,false,false,true,true,false,false,true,
+    false,true,false,true,false,false,true,false,false,true,true,true,true,true,false,false,false,false,true,false,true,false,false,true,true,false,false,true,true,false,
+    true,true,true,false,true,true,false,true,false,true,false,true,false,true,true,true,true,true,true,true,false,true,true,false,false,true,true,true,false,true,
+    61,107,114,130,26,55,104,118,47,109,126,68,19,30,66,129,34,37,77,4,111,82,115,7,143,126,98,6,95,9,
+    0,4,0,1,2,3,1,2,4,2,1,4,2,4,0,3,1,1,4,3,1,1,0,1,3,0,3,1,3,2,
+    3,2,1,1,1,0,3,3,0,1,1,1,2,0,3,2,2,1,3,3,1,2,0,1,0,0,3,1,3,2,
+    false,false,true,true,true,true,false,false,true,true,true,true,false,true,false,false,false,true,false,false,true,false,true,true,true,true,false,true,false,false,
+    true,true,false,false,false,false,true,true,false,false,false,false,true,false,true,true,true,false,true,true,false,true,false,false,false,false,true,false,true,true,
+    false,true,false,true,true,false,true,false,true,true,true,true,true,true,true,false,false,false,false,false,true,false,true,false,true,true,true,true,true,true,
+    70,134,5,1,137,103,36,67,14,72,26,59,62,19,15,43,66,1,64,48,96,11,140,51,143,15,123,121,118,87,
+    0,3,3,2,2,2,3,0,2,4,0,0,3,2,1,2,3,1,0,0,2,3,0,2,3,4,1,0,4,2,
+    0,3,1,1,1,0,2,0,3,2,2,2,2,0,1,0,2,1,1,3,3,3,2,0,1,2,2,1,2,2,
+    true,false,true,true,true,true,false,true,false,false,false,false,false,true,true,true,false,true,true,false,false,false,false,true,true,false,false,true,false,false,
+    false,true,false,false,false,false,true,false,true,true,true,true,true,false,false,false,true,false,false,true,true,true,true,false,false,true,true,false,true,true,
+    true,true,true,true,true,false,true,true,true,true,true,false,false,true,true,true,true,true,true,true,false,false,true,true,false,true,false,true,true,false,
+    65,43,23,107,122,72,123,70,37,119,105,45,63,17,96,52,143,96,55,120,37,58,75,37,108,9,11,85,29,47
+};
+const double testValues2[90] = {
+    0.21648381271159334,0.4578800426895253,0.27989137739208236,0.8274819471874967,0.02337906897965436,0.8130527520544811,0.8259982166192706,0.2860039839242797,0.4544498059116442,0.8607397539052419,0.6327249763219895,0.3984689682454855,0.9733862337136455,0.3778862944107677,0.9574980064169152,0.5094214542631903,0.3678694724061542,0.5208161756158796,0.15443468413907369,0.18226447278113111,0.07973927046909612,0.40928389140334853,0.3607318173222258,0.11153620730276659,0.6100983399200082,0.4172767573286176,0.6715801599752946,0.9578943669855986,0.9400580291666438,0.14764800605596862,
+    0.7511790796230312,0.4098862181030156,0.3404879736602128,0.7846782770692885,0.16357361187009323,0.4353798831778861,0.6147201691162139,0.7957866001088524,0.7275589177798784,0.7849444596751881,0.32940366229077267,0.023405975328188555,0.13469991136736947,0.881064912604999,0.8399010091807934,0.9215629829653318,0.4264974377344004,0.1688918372851289,0.457970116689255,0.774984968153102,0.3585905668585654,0.40284622511450296,0.4413523163860624,0.638758766349437,0.7786164780752133,0.3306481729145143,0.11763865660510431,0.12965202697864708,0.684994786975144,0.04091311944228471,
+    0.06936593092736709,0.3161417136685938,0.3151577130304273,0.6683531867448551,0.8453307227942559,0.6548602821570302,0.6842927491964281,0.31492738700431344,0.6069760372792659,0.4370164093931297,0.8383995139571817,0.5462581828004222,0.36623779939778023,0.5240750515950545,0.654774289145794,0.38478353489825334,0.929920837344097,0.9136826016892498,0.04167591615708499,0.6473051416073519,0.4104729851851917,0.3900000021992245,0.013475147423727574,0.6557640189211197,0.38025742862322875,0.09732695683288928,0.3368690706118216,0.8361052046598272,0.783489979072712,0.29009972582352317
+};
+const long long int testValues3[90] = {
+    3993421386266097420,8446396091387007308,5163084521500006212,-3182396289919908946,431267565062771753,-3448568117310212254,-3209766529390575008,5275842407096387067,8383119457941297358,-2568898069125957857,-6775028311821563503,7350454965637694624,-490937351838304717,6970771722608266188,-784023411361909988,-9049576841953427452,6785994058163129929,-8839381542754192757,2848817259642309947,3362186108455961503,1470929897726449201,7549955381383762125,6654327566831859864,2057479864545293441,-7192416222364596030,7697397653644896988,-6058276652260916522,-776711846695063606,-1105734286210520825,2723624970521537106,
+    -4589935837202980118,7561066201763648723,6280894568551754616,-3971984871524159835,3017400494401384848,8031341381972090527,-7107158343953755303,-3767072458830508680,-5025650851501546115,-3967074709380734918,6076425033111228448,431764091862982748,2484774843009156877,-2193965066575245041,-2953305156101582542,-1446907618438593064,7867488968799327054,3115504548522610270,8448057662895493608,-4150794770841613435,6614828286402829954,7431201225841590714,8141513285486863374,-6663724467157189488,-4083805021293590879,6099382375024269196,2170050061616351846,2391657938607341628,-5810820778434464300,754713792011404686,
+    1279575472323729037,5831785309522532696,5813633651739524245,-6117803810242137254,-2853144466140541760,-6366704064905785646,-5823770826205225585,5809384890054044572,-7250012421785923961,8061529794050959061,-2981002930490528716,-8370059088092764036,6755894889892008048,-8779265785458571434,-6368290290359188764,7098003342591624979,-1292732229196440113,-1592274851480480594,768784944199875334,-6506071909234252519,7571890113224650043,7194230221678762520,248572438436743553,-6350033111775735444,7014511571296437519,1795365334861431348,6214137464638876483,-3023325454433121136,-3993905028804792342,5351395591634444167
 };
 void testRand(const long long int& world_seed) {
     bool allRight = true;
@@ -436,28 +503,46 @@ void testRand(const long long int& world_seed) {
     for (size_t i = 0; i < num; i++) { if (rand.nextBoolean() != testValues[(3*num) + i]) { allRight = false; std::cout << "ERROR4\n"; } }
     rand.setSeed(world_seed);
     for (size_t i = 0; i < num; i++) { if ((rand.nextInt(3) > 0) != testValues[(4*num) + i]) { allRight = false; std::cout << "ERROR5\n"; } }
+    rand.setSeed(world_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextDouble() != testValues2[i]) { allRight = false; std::cout << "ERROR6\n"; } }
+    rand.setSeed(world_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextLong() != testValues3[i]) { allRight = false; std::cout << "ERROR7\n"; } }
+    rand.setSeed(world_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(145) != testValues[(5*num) + i]) { allRight = false; std::cout << "ERROR2\n"; } }
     // carver_seed
     rand.setSeed(carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextInt(5) != testValues[(5*num) + i]) { allRight = false; std::cout << "ERROR6\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(5) != testValues[(6*num) + i]) { allRight = false; std::cout << "ERROR8\n"; } }
     rand.setSeed(carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextInt(4) != testValues[(6*num) + i]) { allRight = false; std::cout << "ERROR7\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(4) != testValues[(7*num) + i]) { allRight = false; std::cout << "ERROR9\n"; } }
     rand.setSeed(carver_seed);
-    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(2) == 0) != testValues[(7*num) + i]) { allRight = false; std::cout << "ERROR8\n"; } }
+    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(2) == 0) != testValues[(8*num) + i]) { allRight = false; std::cout << "ERROR10\n"; } }
     rand.setSeed(carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextBoolean() != testValues[(8*num) + i]) { allRight = false; std::cout << "ERROR9\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextBoolean() != testValues[(9*num) + i]) { allRight = false; std::cout << "ERROR11\n"; } }
     rand.setSeed(carver_seed);
-    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(3) > 0) != testValues[(9*num) + i]) { allRight = false; std::cout << "ERROR10\n"; } }
+    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(3) > 0) != testValues[(10*num) + i]) { allRight = false; std::cout << "ERROR12\n"; } }
+    rand.setSeed(carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextDouble() != testValues2[num + i]) { allRight = false; std::cout << "ERROR13\n"; } }
+    rand.setSeed(carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextLong() != testValues3[num + i]) { allRight = false; std::cout << "ERROR14\n"; } }
+    rand.setSeed(carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(145) != testValues[(11*num) + i]) { allRight = false; std::cout << "ERROR2\n"; } }
     // carver_carver_seed
     rand.setSeed(carver_carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextInt(5) != testValues[(10*num) + i]) { allRight = false; std::cout << "ERROR11\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(5) != testValues[(12*num) + i]) { allRight = false; std::cout << "ERROR15\n"; } }
     rand.setSeed(carver_carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextInt(4) != testValues[(11*num) + i]) { allRight = false; std::cout << "ERROR12\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(4) != testValues[(13*num) + i]) { allRight = false; std::cout << "ERROR16\n"; } }
     rand.setSeed(carver_carver_seed);
-    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(2) == 0) != testValues[(12*num) + i]) { allRight = false; std::cout << "ERROR13\n"; } }
+    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(2) == 0) != testValues[(14*num) + i]) { allRight = false; std::cout << "ERROR17\n"; } }
     rand.setSeed(carver_carver_seed);
-    for (size_t i = 0; i < num; i++) { if (rand.nextBoolean() != testValues[(13*num) + i]) { allRight = false; std::cout << "ERROR14\n"; } }
+    for (size_t i = 0; i < num; i++) { if (rand.nextBoolean() != testValues[(15*num) + i]) { allRight = false; std::cout << "ERROR18\n"; } }
     rand.setSeed(carver_carver_seed);
-    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(3) > 0) != testValues[(14*num) + i]) { allRight = false; std::cout << "ERROR15\n"; } }
+    for (size_t i = 0; i < num; i++) { if ((rand.nextInt(3) > 0) != testValues[(16*num) + i]) { allRight = false; std::cout << "ERROR19\n"; } }
+    rand.setSeed(carver_carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextDouble() != testValues2[(2*num) + i]) { allRight = false; std::cout << "ERROR20\n"; } }
+    rand.setSeed(carver_carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextLong() != testValues3[(2*num) + i]) { allRight = false; std::cout << "ERROR21\n"; } }
+    rand.setSeed(carver_carver_seed);
+    for (size_t i = 0; i < num; i++) { if (rand.nextInt(145) != testValues[(17*num) + i]) { allRight = false; std::cout << "ERROR2\n"; } }
     
     if (allRight) std::cout << "All random values were correct.\n";
     else std::cout << "Some random values were not correct.\n";
@@ -669,8 +754,8 @@ DoublePerlinNoise::DoublePerlinNoise(Xoroshiro* rand, const int& firstOctave, co
     int TopAmplitudeIdx = -1;
     for (size_t i = 0; i < amplitudes.size(); i++) {
         if (amplitudes[i] == 0) continue;
-        bottomAmplitudeIdx = myMin(bottomAmplitudeIdx, i);
-        TopAmplitudeIdx = myMax(TopAmplitudeIdx, i);
+        bottomAmplitudeIdx = std::min(bottomAmplitudeIdx, static_cast<int>(i));
+        TopAmplitudeIdx = std::max(TopAmplitudeIdx, static_cast<int>(i));
     }
     amplitude = 1.6666666666666666 / (1.0 + 1.0 / (double)(TopAmplitudeIdx - bottomAmplitudeIdx + 1));
     maxValue = (firstSampler.getMaxValue() + secondSampler.getMaxValue()) * amplitude;
@@ -794,7 +879,7 @@ int SimplexNoise::map(const int& input) const {
 // see SimplexNoiseSampler.grad function in SimplexNoiseSampler.java
 // r_2 of 0.5 is default, 0.6 may give better results ( see en.wikipedia.org/wiki/Simplex_noise )
 double SimplexNoise::grad(const int& hash, const Vec3D& V, double r_2) const {
-    double thing = myMax(0.0, r_2 - V.magnitude());
+    double thing = std::max(0.0, r_2 - V.magnitude());
     thing *= thing;
     return thing * thing * dot(PERLIN_GRADIENTS[hash], V);// thing^4 * gradient[hash].dot(V)
 }

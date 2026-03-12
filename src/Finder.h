@@ -13,7 +13,7 @@ OwningNullable<Pos> locateBiome(const Pos& pos, const int& radius, const std::ve
 class Finder {
     public:
     Finder() {}
-    std::vector<ChunkPos> concentricRings(const long long int& worldSeed, const int& distance=32, const int& count=128, int spread=3);
+    std::vector<ChunkPos> generateRingPositions(const long long int& worldSeed, const int& distance=32, const int& count=128, int spread=3);
 };
 
 #endif// __FINDER

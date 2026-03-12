@@ -1,16 +1,8 @@
 #ifndef __LIB
 #define __LIB
 
-const double PI = 3.141592653589;
-const double TAU = 6.28318530718;
-
-unsigned int myMin(const unsigned int& a, const unsigned int& b);
-unsigned int myMax(const unsigned int& a, const unsigned int& b);
-int myMin(const int& a, const int& b);
-int myMax(const int& a, const int& b);
-int myMin(const double& a, const double& b);
-int myMax(const double& a, const double& b);
-int myAbs(const int& x);
+const double PI =  3.14159265359;
+const double TAU = 6.283185307179586476925286766559;
 
 #pragma region structs
 template <typename T>
@@ -20,7 +12,7 @@ struct Nullable {
     public:
     bool hasValue;
     Nullable() : value(nullptr), hasValue(false) {};
-    Nullable(T* _value) : value(_value), hasValue(_value == nullptr) {};
+    Nullable(T* _value) : value(_value), hasValue(_value != nullptr) {};
     Nullable(const Nullable<T>& copy) = delete;
     Nullable(Nullable<T>&& move) = delete;
     Nullable<T>& operator=(const Nullable<T>& copy) = delete;

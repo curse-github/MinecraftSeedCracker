@@ -37,14 +37,15 @@ class LCG : public Random {
     long long int inv_a;
     long long int b;
     unsigned long long int m;
-    long long int seed;
     public:
-    LCG(const long long int& _seed, const long long int& _a = 25214903917ull, const long long int& _b = 11ull, const unsigned long long int& _m = (1ull << 48ull))
-        : seed((_seed ^ _a) & (_m - 1)), a(_a), inv_a(modInverse(_a, _m)), b(_b), m(_m) {}// default values are taken from the java LCG "LCG" RNG class
-    LCG(const LCG& copy)
-        : seed(copy.seed), a(copy.a), inv_a(copy.inv_a), b(copy.b), m(copy.m) {}// default values are taken from the java LCG "LCG" RNG class
+    long long int seed;
+    int count = 0;
+    bool debug;
+    LCG(const long long int& _seed, const bool& _debug = false, const long long int& _a = 25214903917ull, const long long int& _b = 11ull, const unsigned long long int& _m = (1ull << 48ull))
+        : seed((_seed ^ _a) & (_m - 1)), debug(_debug), a(_a), inv_a(modInverse(_a, _m)), b(_b), m(_m) {}// default values are taken from the java LCG "LCG" RNG class
+    LCG(const LCG& copy) = delete;
     virtual ~LCG() {}
-    LCG& operator=(const LCG& copy);
+    LCG& operator=(const LCG& copy) = delete;
     void setSeed(const long long int& _seed);
     void setCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ);
     void setCarverSeed(const long long int& worldSeed, const ChunkPos& chunk);

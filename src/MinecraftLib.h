@@ -82,8 +82,8 @@ enum DirectionIndices {
 extern Direction Directions[6];
 extern Direction HorizontalDirections[4];
 
-// see BlockBox class in BlockBox.java
-struct BlockBox {
+// see BoundingBox class in BoundingBox.java
+struct BoundingBox {
     int minX;
     int minY;
     int minZ;
@@ -91,30 +91,27 @@ struct BlockBox {
     int maxY;
     int maxZ;
     std::string color = "#000000";
-    BlockBox() : minX(0), minY(0), minZ(0), maxX(0), maxY(0), maxZ(0){}
-    BlockBox(const int& _minX, const int& _minY, const int& _minZ, const int& _maxX, const int& _maxY, const int& _maxZ)
+    BoundingBox() : minX(0), minY(0), minZ(0), maxX(0), maxY(0), maxZ(0){}
+    BoundingBox(const int& _minX, const int& _minY, const int& _minZ, const int& _maxX, const int& _maxY, const int& _maxZ)
         : minX(_minX), minY(_minY), minZ(_minZ), maxX(_maxX), maxY(_maxY), maxZ(_maxZ) {}
-    BlockBox(const Vec3& min, const Vec3& max)
+    BoundingBox(const Vec3& min, const Vec3& max)
         : minX(min.x), minY(min.y), minZ(min.z), maxX(max.x), maxY(max.y), maxZ(max.z) {}
-    BlockBox(const Pos& position, const Vec3& size)
+    BoundingBox(const Pos& position, const Vec3& size)
         : minX(position.x), minY(position.y), minZ(position.z), maxX(position.x + size.x), maxY(position.y + size.y), maxZ(position.z + size.z) {}
     // see StructurePiece.createBox function in StructurePiece.java
-    BlockBox(const Pos& origin, const int& width, const int& height, const int& depth, Direction orientation);
-    BlockBox(const BlockBox& copy)
+    BoundingBox(const Pos& origin, const Vec3& size, Direction orientation);
+    BoundingBox(const BoundingBox& copy)
         : minX(copy.minX), minY(copy.minY), minZ(copy.minZ), maxX(copy.maxX), maxY(copy.maxY), maxZ(copy.maxZ), color(copy.color) {}
-    BlockBox(BlockBox&& move)
+    BoundingBox(BoundingBox&& move)
         : minX(move.minX), minY(move.minY), minZ(move.minZ), maxX(move.maxX), maxY(move.maxY), maxZ(move.maxZ), color(move.color) {}
-    void operator=(const BlockBox& copy);
-    void operator=(BlockBox&& move);
-    static BlockBox rotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing);
-    static BlockBox* newRotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing);
-    bool intersects(const BlockBox& rhs) const;
-    void encompass(const BlockBox& other);
+    void operator=(const BoundingBox& copy);
+    void operator=(BoundingBox&& move);
+    static BoundingBox rotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing);
+    static BoundingBox* newRotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing);
+    bool intersects(const BoundingBox& rhs) const;
+    void encompass(const BoundingBox& other);
     void move(const Vec3& offset);
     void move(const int& dx, const int& dy, const int& dz);
-    void moveX(const int& dx);
-    void moveY(const int& dy);
-    void moveZ(const int& dz);
     int getBlockCountX() const;
     int getBlockCountY() const;
     int getBlockCountZ() const;
@@ -123,6 +120,6 @@ struct BlockBox {
     Pos getMin() const;
     Pos getMax() const;
 };
-int checkIntersections(const std::vector<BlockBox>& boxes);
+int checkIntersections(const std::vector<BoundingBox>& boxes);
 
 #endif// __MINECRAFT_LIB
