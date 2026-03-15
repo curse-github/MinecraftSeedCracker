@@ -606,12 +606,12 @@ int moveBelowSeaLevel(std::vector<StructurePiece*>& builder, const int& seaLevel
     return dy;
 }
 // StrongholdStructure.generatePieces function in net/minecraft/world/level/levelgen/structure/structures/StrongholdStructure
-OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const ChunkPos& chunk, const bool& debug) {
+OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const SectionPos& chunk, const bool& debug) {
     std::vector<StructurePiece*> builder;
     LCG rand(0);
     StartPiece* startRoom = nullptr;
     int tries = 0;
-    Pos startPos = chunk.getOffsetPos({ 2, 0, 2 });
+    Pos startPos = chunk.toBlockPos({ 2, 0, 2 });
     do {
         for (size_t j = 0; j < builder.size(); j++)
             delete builder[j];

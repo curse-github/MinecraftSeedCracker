@@ -47,9 +47,7 @@
 /*     */ 
 /*     */   
 /*     */   private Climate.ParameterList<Holder<Biome>> parameters() {
-/*  50 */     return (Climate.ParameterList)this.parameters.map(direct -> 
-/*  51 */         direct, preset -> (
-/*  52 */         (MultiNoiseBiomeSourceParameterList)preset.value()).parameters());
+/*  50 */     return (Climate.ParameterList)this.parameters.map(direct -> direct, preset -> ((MultiNoiseBiomeSourceParameterList)preset.value()).parameters());
 /*     */   }
 /*     */ 
 /*     */ 

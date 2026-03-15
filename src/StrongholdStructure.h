@@ -237,5 +237,5 @@ struct StartEndBoxes {
     Pos end;
     StartEndBoxes(const Pos& _start, const Pos& _end) : start(_start), end(_end) {}
 };
-OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const ChunkPos& chunk, const bool& debug = false);
+OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const SectionPos& chunk, const bool& debug = false);
 #endif

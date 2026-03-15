@@ -1,14 +1,24 @@
 #include "MinecraftLib.h"
 
 #pragma region Pos
-ChunkPos Pos::getChunkPos() const {
-    return ChunkPos(x >> 4, z >> 4);
+Pos& Pos::operator=(const Pos& copy) {
+    this->x = copy.x;
+    this->y = copy.y;
+    this->z = copy.z;
+    return *this;
+};
+Pos& Pos::operator=(Pos&& move) {
+    this->x = move.x;
+    this->y = move.y;
+    this->z = move.z;
+    return *this;
+};
+
+SectionPos Pos::toSectionPos() const {
+    return SectionPos();
 }
-Pos Pos::getOffsetPos(Pos offset) const {
-    return operator+(offset);
-}
-BiomePos Pos::getBiomePos() const {
-    return BiomePos(x >> 2, z >> 2);
+QuartPos Pos::toQuartPos() const {
+    return QuartPos(QuartPos::fromBlock(x), QuartPos::fromBlock(y), QuartPos::fromBlock(z));
 }
 Vec3 Pos::toVec3() const {
     return Vec3(x, y, z);
@@ -18,40 +28,58 @@ Vec3D Pos::toVec3D() const {
 }
 #pragma endregion Pos
 
-#pragma region ChunkPos
-ChunkPos& ChunkPos::operator=(const ChunkPos& copy) {
+#pragma region SectionPos
+SectionPos& SectionPos::operator=(const SectionPos& copy) {
     this->x = copy.x;
     this->z = copy.z;
     return *this;
 };
-ChunkPos& ChunkPos::operator=(ChunkPos&& move) {
+SectionPos& SectionPos::operator=(SectionPos&& move) {
     this->x = move.x;
     this->z = move.z;
     return *this;
 };
-Pos ChunkPos::getBlockPos() const {
-    return Pos(x << 4, 0, z << 4);
-}
-Pos ChunkPos::getOffsetPos(Pos offset) const {
-    return getBlockPos() + offset;
-}
-#pragma endregion ChunkPos
+SectionPos& SectionPos::operator=(const Vec2& copy) {
+    this->x = copy.x;
+    this->z = copy.z;
+    return *this;
+};
 
-#pragma region BiomePos
-BiomePos& BiomePos::operator=(const BiomePos& copy) {
+Pos SectionPos::toBlockPos() const {
+    return Pos(toBlock(x), 0, toBlock(z));
+}
+Pos SectionPos::toBlockPos(Pos offset) const {
+    return Pos(toBlock(x, offset.x), offset.y, toBlock(z, offset.z));
+}
+Vec2 SectionPos::toVec2() const {
+    return Vec2(x, z);
+}
+Vec2D SectionPos::toVec2D() const {
+    return Vec2D(x, z);
+}
+#pragma endregion SectionPos
+
+#pragma region QuartPos
+QuartPos& QuartPos::operator=(const QuartPos& copy) {
     this->x = copy.x;
     this->z = copy.z;
     return *this;
 };
-BiomePos& BiomePos::operator=(BiomePos&& move) {
+QuartPos& QuartPos::operator=(QuartPos&& move) {
     this->x = move.x;
     this->z = move.z;
     return *this;
 };
-Pos BiomePos::getBlockPos() const {
-    return Pos(x << 2, 0, z << 2);
+Pos QuartPos::toBlock() const {
+    return Pos(toBlock(x), 0, toBlock(z));
 }
-#pragma endregion BiomePos
+Vec2 QuartPos::toVec2() const {
+    return Vec2(x, z);
+}
+Vec2D QuartPos::toVec2D() const {
+    return Vec2D(x, z);
+}
+#pragma endregion QuartPos
 
 // see Direction enum in Direction.java
 Direction Directions[6] = {

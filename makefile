@@ -10,12 +10,12 @@ makeTmp:
 	$(O_BUILD) ./tmp/MinecraftLib.o -c ./src/MinecraftLib.cpp
 ./tmp/Random.o: makeTmp ./src/Random.cpp
 	$(O_BUILD) ./tmp/Random.o -c ./src/Random.cpp
-./tmp/Finder.o: makeTmp ./src/Finder.cpp
-	$(O_BUILD) ./tmp/Finder.o -c ./src/Finder.cpp
 ./tmp/StrongholdStructure.o: makeTmp ./src/StrongholdStructure.cpp
 	$(O_BUILD) ./tmp/StrongholdStructure.o -c ./src/StrongholdStructure.cpp
 ./tmp/RandomSolver.o: makeTmp ./src/RandomSolver.cpp
 	$(O_BUILD) ./tmp/RandomSolver.o -c ./src/RandomSolver.cpp
+./tmp/Biome.o: makeTmp ./src/Biome.cpp
+	$(O_BUILD) ./tmp/Biome.o -c ./src/Biome.cpp
 
 ./tmp/Lib.a: makeTmp ./tmp/Lib.o
 	$(LIB_BUILD) ./tmp/Lib.a ./tmp/Lib.o
@@ -23,12 +23,12 @@ makeTmp:
 	$(LIB_BUILD) ./tmp/MinecraftLib.a ./tmp/MinecraftLib.o
 ./tmp/Random.a: makeTmp ./tmp/Random.o
 	$(LIB_BUILD) ./tmp/Random.a ./tmp/Random.o
-./tmp/Finder.a: makeTmp ./tmp/Finder.o
-	$(LIB_BUILD) ./tmp/Finder.a ./tmp/Finder.o
 ./tmp/StrongholdStructure.a: makeTmp ./tmp/StrongholdStructure.o
 	$(LIB_BUILD) ./tmp/StrongholdStructure.a ./tmp/StrongholdStructure.o
 ./tmp/RandomSolver.a: makeTmp ./tmp/RandomSolver.o
 	$(LIB_BUILD) ./tmp/RandomSolver.a ./tmp/RandomSolver.o
+./tmp/Biome.a: makeTmp ./tmp/Biome.o
+	$(LIB_BUILD) ./tmp/Biome.a ./tmp/Biome.o
 
-main.exe: ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/Finder.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a
-	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/Finder.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a
+main.exe: ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/Biome.a
+	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/Biome.a

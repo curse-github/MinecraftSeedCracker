@@ -54,75 +54,85 @@
            return structure.biomes().stream();
          });
      Objects.requireNonNull(biomeSource.possibleBiomes()); return structureBiomes.anyMatch(biomeSource.possibleBiomes()::contains);
-   } private ChunkGeneratorStructureState(RandomState randomState, BiomeSource biomeSource, long levelSeed, long concentricRingsSeed, List<Holder<StructureSet>> possibleStructureSets) {
-     this.placementsForStructure = new Object2ObjectOpenHashMap();
-     this.ringPositions = new Object2ObjectArrayMap();
-     this.randomState = randomState;
-     this.levelSeed = levelSeed;
-     this.biomeSource = biomeSource;
-     this.concentricRingsSeed = concentricRingsSeed;
-     this.possibleStructureSets = possibleStructureSets;
    }
-   public List<Holder<StructureSet>> possibleStructureSets() { return this.possibleStructureSets; }
-   private void generatePositions() {
-     Set<Holder<Biome>> possibleBiomes = this.biomeSource.possibleBiomes();
-     possibleStructureSets().forEach(setHolder -> {
-           StructureSet set = (StructureSet)setHolder.value();
-           boolean hasAnyPlaceableStructures = false;
-           for (StructureSet.StructureSelectionEntry entry : set.structures()) {
-             Structure structure = (Structure)entry.structure().value();
-             Objects.requireNonNull(possibleBiomes); if (structure.biomes().stream().anyMatch(possibleBiomes::contains)) {
-               ((List)this.placementsForStructure.computeIfAbsent(structure, ())).add(set.placement());
-               hasAnyPlaceableStructures = true;
-             } 
-           } 
-           if (hasAnyPlaceableStructures) { StructurePlacement patt0$temp = set.placement(); if (patt0$temp instanceof ConcentricRingsStructurePlacement) { ConcentricRingsStructurePlacement ringsPlacement = (ConcentricRingsStructurePlacement)patt0$temp;
-               this.ringPositions.put(ringsPlacement, generateRingPositions(setHolder, ringsPlacement)); }
-              }
-         });
-   }
-   private CompletableFuture<List<ChunkPos>> generateRingPositions(Holder<StructureSet> structureSet, ConcentricRingsStructurePlacement placement) {
-     if (placement.count() == 0) {
-       return CompletableFuture.completedFuture(List.of());
-     }
-     Stopwatch stopwatch = Stopwatch.createStarted(Util.TICKER);
-     int distance = placement.distance();
-     int count = placement.count();
-     List<CompletableFuture<ChunkPos>> tasks = new ArrayList<CompletableFuture<ChunkPos>>(count);
-     int spread = placement.spread();
-     HolderSet<Biome> preferredBiomes = placement.preferredBiomes();
-     RandomSource random = RandomSource.create();
-     random.setSeed(this.concentricRingsSeed);
-     double angle = random.nextDouble() * Math.PI * 2.0D;
-     int positionInCircle = 0;
-     int circle = 0;
-     for (int i = 0; i < count; i++) {
-       double dist = (4 * distance + distance * circle * 6) + (random.nextDouble() - 0.5D) * distance * 2.5D;
-       int initialX = (int)Math.round(Math.cos(angle) * dist);
-       int initialZ = (int)Math.round(Math.sin(angle) * dist);
-       RandomSource biomeSearchGenerator = random.fork();
-       tasks.add(CompletableFuture.supplyAsync(() -> {
-               Objects.requireNonNull(preferredBiomes); Pair<BlockPos, Holder<Biome>> closestBiome = this.biomeSource.findBiomeHorizontal(SectionPos.sectionToBlockCoord(initialX, 8), 0, SectionPos.sectionToBlockCoord(initialZ, 8), 112, preferredBiomes::contains, biomeSearchGenerator, this.randomState.sampler());
-               if (closestBiome != null) {
-                 BlockPos position = (BlockPos)closestBiome.getFirst();
-                 return new ChunkPos(SectionPos.blockToSectionCoord(position.getX()), SectionPos.blockToSectionCoord(position.getZ()));
-               } 
-               return new ChunkPos(initialX, initialZ);
-             }Util.backgroundExecutor().forName("structureRings")));
-       angle += 6.283185307179586D / spread;
-       if (++positionInCircle == spread) {
-         circle++;
-         positionInCircle = 0;
-         spread += 2 * spread / (circle + 1);
-         spread = Math.min(spread, count - i);
-         angle += random.nextDouble() * Math.PI * 2.0D;
-       } 
-     } 
-     return Util.sequence(tasks).thenApply(ringPositions -> {
-           double elapsedSeconds = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS) / 1000.0D;
-           LOGGER.debug("Calculation for {} took {}s", structureSet, Double.valueOf(elapsedSeconds));
-           return ringPositions;
-         });
+   private ChunkGeneratorStructureState(RandomState randomState, BiomeSource biomeSource, long levelSeed, long concentricRingsSeed, List<Holder<StructureSet>> possibleStructureSets) {
+		this.placementsForStructure = new Object2ObjectOpenHashMap();
+		this.ringPositions = new Object2ObjectArrayMap();
+		this.randomState = randomState;
+		this.levelSeed = levelSeed;
+		this.biomeSource = biomeSource;
+		this.concentricRingsSeed = concentricRingsSeed;
+		this.possibleStructureSets = possibleStructureSets;
+	}
+	public List<Holder<StructureSet>> possibleStructureSets() { return this.possibleStructureSets; }
+	private void generatePositions() {
+		Set<Holder<Biome>> possibleBiomes = this.biomeSource.possibleBiomes();
+		possibleStructureSets().forEach(setHolder -> {
+			StructureSet set = (StructureSet)setHolder.value();
+			boolean hasAnyPlaceableStructures = false;
+			for (StructureSet.StructureSelectionEntry entry : set.structures()) {
+				Structure structure = (Structure)entry.structure().value();
+				Objects.requireNonNull(possibleBiomes); if (structure.biomes().stream().anyMatch(possibleBiomes::contains)) {
+				((List)this.placementsForStructure.computeIfAbsent(structure, ())).add(set.placement());
+				hasAnyPlaceableStructures = true;
+				} 
+			} 
+			if (hasAnyPlaceableStructures) { StructurePlacement patt0$temp = set.placement(); if (patt0$temp instanceof ConcentricRingsStructurePlacement) { ConcentricRingsStructurePlacement ringsPlacement = (ConcentricRingsStructurePlacement)patt0$temp;
+				this.ringPositions.put(ringsPlacement, generateRingPositions(setHolder, ringsPlacement)); }
+				}
+			});
+	}
+	private CompletableFuture<List<ChunkPos>> generateRingPositions(Holder<StructureSet> structureSet, ConcentricRingsStructurePlacement placement) {
+		if (placement.count() == 0)
+			return CompletableFuture.completedFuture(List.of());
+		Stopwatch stopwatch = Stopwatch.createStarted(Util.TICKER);
+		int distance = placement.distance();
+		int count = placement.count();
+		List<CompletableFuture<ChunkPos>> tasks = new ArrayList<CompletableFuture<ChunkPos>>(count);
+		int spread = placement.spread();
+		HolderSet<Biome> preferredBiomes = placement.preferredBiomes();
+		RandomSource random = RandomSource.create();
+		random.setSeed(this.concentricRingsSeed);
+		double angle = random.nextDouble() * Math.PI * 2.0D;
+		int positionInCircle = 0;
+		int circle = 0;
+		for (int i = 0; i < count; i++) {
+		double dist = (4 * distance + distance * circle * 6) + (random.nextDouble() - 0.5D) * distance * 2.5D;
+		int initialX = (int)Math.round(Math.cos(angle) * dist);
+		int initialZ = (int)Math.round(Math.sin(angle) * dist);
+		RandomSource biomeSearchGenerator = random.fork();
+		tasks.add(CompletableFuture.supplyAsync(() -> {
+            Objects.requireNonNull(preferredBiomes);
+			Pair<BlockPos, Holder<Biome>> closestBiome = this.biomeSource.findBiomeHorizontal(
+                SectionPos.sectionToBlockCoord(initialX, 8),
+				0,
+				SectionPos.sectionToBlockCoord(initialZ, 8),
+				112,
+				preferredBiomes::contains,
+				biomeSearchGenerator,
+				this.randomState.sampler()
+			);
+			if (closestBiome != null) {
+				BlockPos position = (BlockPos)closestBiome.getFirst();
+				return new ChunkPos(SectionPos.blockToSectionCoord(position.getX()), SectionPos.blockToSectionCoord(position.getZ()));
+			}
+			return new ChunkPos(initialX, initialZ);
+		}
+		Util.backgroundExecutor().forName("structureRings")));
+		angle += 6.283185307179586D / spread;
+		if (++positionInCircle == spread) {
+			circle++;
+			positionInCircle = 0;
+			spread += 2 * spread / (circle + 1);
+			spread = Math.min(spread, count - i);
+			angle += random.nextDouble() * Math.PI * 2.0D;
+		} 
+    } 
+	return Util.sequence(tasks).thenApply(ringPositions -> {
+		double elapsedSeconds = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS) / 1000.0D;
+		LOGGER.debug("Calculation for {} took {}s", structureSet, Double.valueOf(elapsedSeconds));
+		return ringPositions;
+	});
    }
    public void ensureStructuresGenerated() {
      if (!this.hasGeneratedPositions) {

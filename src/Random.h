@@ -16,7 +16,7 @@ class BitRandomSource {
     public:
     virtual ~BitRandomSource() {}
     static long long int getCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ);
-    static long long int getCarverSeed(const long long int& worldSeed, const ChunkPos& chunk);
+    static long long int getCarverSeed(const long long int& worldSeed, const SectionPos& chunk);
 
     virtual long long int nextSeed() = 0;
     virtual long long int nextSeed(const unsigned int& steps) = 0;
@@ -51,7 +51,7 @@ class LCG : public BitRandomSource {
 
     void setSeed(const long long int& _seed);
     void setCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ);
-    void setCarverSeed(const long long int& worldSeed, const ChunkPos& chunk);
+    void setCarverSeed(const long long int& worldSeed, const SectionPos& chunk);
     
     int next(const int& bits);
     virtual int nextInt();

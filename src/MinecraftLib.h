@@ -5,59 +5,76 @@
 #include <vector>
 #include "Lib.h"
 
-struct ChunkPos;
-struct BiomePos;
+struct SectionPos;
+struct QuartPos;
 struct Pos : public Vec3 {
-    Pos() : Vec3() {
-    }
-    Pos(const int& _x, const int& _y, const int& _z) : Vec3(_x, _y, _z) {
-    }
-    Pos(const Vec3& copy) : Vec3(copy.x, copy.y, copy.z) {
-    }
-    Pos(const Pos& copy) : Vec3(copy.x, copy.y, copy.z) {
-    }
+    Pos() : Vec3(0, 0, 0) {}
+    Pos(const int& _x, const int& _y, const int& _z) : Vec3(_x, _y, _z) {}
+    Pos(const Vec3& copy) : Vec3(copy.x, copy.y, copy.z) {}
+    Pos(const Pos& copy) : Vec3(copy.x, copy.y, copy.z) {}
+    ~Pos() {};
+    Pos& operator=(const Pos& copy);
+    Pos& operator=(Pos&& move);
     Pos operator+(const Pos& rhs) const {
         return Pos(x + rhs.x, y + rhs.y, z + rhs.z);
     }
     Pos operator+(const Vec3& rhs) const {
         return Pos(x + rhs.x, y + rhs.y, z + rhs.z);
     }
-    ChunkPos getChunkPos() const;
-    Pos getOffsetPos(Pos offset) const;
-    BiomePos getBiomePos() const;
+
+    SectionPos toSectionPos() const;
+    QuartPos toQuartPos() const;
     Vec3 toVec3() const;
     Vec3D toVec3D() const;
 };
-// see ChunkPos class in ChunkPos.java
-struct ChunkPos : public Vec2 {
-    ChunkPos() : Vec2(0, 0) {
-    }
-    ChunkPos(const int& _x, const int& _z) : Vec2(_x, _z) {
-    }
-    ChunkPos(const Vec2& copy) : Vec2(copy.x, copy.z) {
-    }
-    ChunkPos(const ChunkPos& copy) : Vec2(copy.x, copy.z) {
-    }
-    ~ChunkPos() {};
-    ChunkPos& operator=(const ChunkPos& copy);
-    ChunkPos& operator=(ChunkPos&& move);
-    Pos getBlockPos() const;
-    Pos getOffsetPos(Pos offset) const;
+// see SectionPos class in net.minecraft.core.SectionPos
+struct SectionPos : public Vec2 {
+    SectionPos() : Vec2(0, 0) {}
+    SectionPos(const int& _x, const int& _z) : Vec2(_x, _z) {}
+    SectionPos(const Vec2& copy) : Vec2(copy.x, copy.z) {}
+    SectionPos(const SectionPos& copy) : Vec2(copy.x, copy.z) {}
+    ~SectionPos() {};
+    SectionPos& operator=(const SectionPos& copy);
+    SectionPos& operator=(SectionPos&& move);
+    SectionPos& operator=(const Vec2& copy);
+    
+    static int fromBlock(const int& block) { return block >> 4; };
+    static int toBlock(const int& block) { return block << 4; };
+    static int toBlock(const int& block, const int& offset) { return toBlock(block) + offset; };
+    static SectionPos fromBlock(const Pos& block) { return { fromBlock(block.x), fromBlock(block.z) }; };
+
+    Pos toBlockPos() const;
+    Pos toBlockPos(Pos offset) const;
+    Vec2 toVec2() const;
+    Vec2D toVec2D() const;
 };
-// see BiomePos class in BiomePos.java
-struct BiomePos : public Vec2 {
-    BiomePos() : Vec2(0, 0) {
+// see QuartPos class in net.minecraft.core.QuartPos
+struct QuartPos : public Vec3 {
+    QuartPos() : Vec3(0, 0, 0) {
     }
-    BiomePos(const int& _x, const int& _z) : Vec2(_x, _z) {
+    QuartPos(const int& _x, const int& _y, const int& _z) : Vec3(_x, _y, _z) {
     }
-    BiomePos(const Vec2& copy) : Vec2(copy.x, copy.z) {
+    QuartPos(const Vec3& copy) : Vec3(copy.x, copy.y, copy.z) {
     }
-    BiomePos(const BiomePos& copy) : Vec2(copy.x, copy.z) {
+    QuartPos(const QuartPos& copy) : Vec3(copy.x, copy.y, copy.z) {
     }
-    ~BiomePos() {};
-    BiomePos& operator=(const BiomePos& copy);
-    BiomePos& operator=(BiomePos&& move);
-    Pos getBlockPos() const;
+    ~QuartPos() {};
+    QuartPos& operator=(const QuartPos& copy);
+    QuartPos& operator=(QuartPos&& move);
+    QuartPos operator+(const QuartPos& rhs) const {
+        return QuartPos(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+    QuartPos operator+(const Vec3& rhs) const {
+        return QuartPos(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+
+    static int fromBlock(const int& block) { return block >> 2; };
+    static int toBlock(const int& block) { return block << 2; };
+    static QuartPos fromBlock(const Pos& block) { return { fromBlock(block.x), fromBlock(block.y), fromBlock(block.z) }; };
+
+    Pos toBlock() const;
+    Vec2 toVec2() const;
+    Vec2D toVec2D() const;
 };
 
 // see Direction class in net.minecraft.core.Direction

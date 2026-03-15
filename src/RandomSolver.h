@@ -2,8 +2,18 @@
 #define __RANDOM_SOLVER
 
 #include <vector>
+#include <string>
 #include <cmath>
+#include "MinecraftLib.h"
 #include "Random.h"
+#include "Lib.h"
+#include "Biome.h"
+
+class StructureFinder {
+    public:
+    StructureFinder() {}
+    static std::vector<SectionPos> generateRingPositions(const long long int& worldSeed, const int& distance=32, const int& count=128, int spread=3);
+};
 
 struct RandomRange {
     unsigned long long int min;
