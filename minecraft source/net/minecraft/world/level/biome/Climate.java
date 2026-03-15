@@ -67,32 +67,32 @@
        }
        protected Leaf<T> search(long[] target, Leaf<T> candidate, Climate.DistanceMetric<T> distanceMetric) { return this; }
      }
-     private static final class SubTree<T>
-       extends Node<T>
-     {
-       private final Climate.RTree.Node<T>[] children;
-       protected SubTree(List<? extends Climate.RTree.Node<T>> children) { this(Climate.RTree.buildParameterSpace(children), children); }
-       protected SubTree(List<Climate.Parameter> parameterSpace, List<? extends Climate.RTree.Node<T>> children) {
-         super(parameterSpace);
-         this.children = (Node[])children.toArray(new Climate.RTree.Node[0]);
-       }
-       protected Climate.RTree.Leaf<T> search(long[] target, Climate.RTree.Leaf<T> candidate, Climate.DistanceMetric<T> distanceMetric) {
-         long minDistance = (candidate == null) ? Float.MAX_VALUE : distanceMetric.distance(candidate, target);
-         Climate.RTree.Leaf<T> closestLeaf = candidate;
-         for (Climate.RTree.Node<T> child : this.children) {
-           long childDistance = distanceMetric.distance(child, target);
-           if (minDistance > childDistance) {
-             Climate.RTree.Leaf<T> leaf = child.search(target, closestLeaf, distanceMetric);
-             long leafDistance = (child == leaf) ? childDistance : distanceMetric.distance(leaf, target);
-             if (minDistance > leafDistance) {
-               minDistance = leafDistance;
-               closestLeaf = leaf;
-             } 
-           } 
-         } 
-         return closestLeaf;
-       }
-     }
+    private static final class SubTree<T>
+      extends Node<T>
+    {
+      private final Climate.RTree.Node<T>[] children;
+      protected SubTree(List<? extends Climate.RTree.Node<T>> children) { this(Climate.RTree.buildParameterSpace(children), children); }
+      protected SubTree(List<Climate.Parameter> parameterSpace, List<? extends Climate.RTree.Node<T>> children) {
+        super(parameterSpace);
+        this.children = (Node[])children.toArray(new Climate.RTree.Node[0]);
+      }
+      protected Climate.RTree.Leaf<T> search(long[] target, Climate.RTree.Leaf<T> candidate, Climate.DistanceMetric<T> distanceMetric) {
+        long minDistance = (candidate == null) ? Float.MAX_VALUE : distanceMetric.distance(candidate, target);
+        Climate.RTree.Leaf<T> closestLeaf = candidate;
+        for (Climate.RTree.Node<T> child : this.children) {
+          long childDistance = distanceMetric.distance(child, target);
+          if (minDistance > childDistance) {
+            Climate.RTree.Leaf<T> leaf = child.search(target, closestLeaf, distanceMetric);
+            long leafDistance = (child == leaf) ? childDistance : distanceMetric.distance(leaf, target);
+            if (minDistance > leafDistance) {
+              minDistance = leafDistance;
+              closestLeaf = leaf;
+            } 
+          } 
+        } 
+        return closestLeaf;
+      }
+    }
      public static <T> RTree<T> create(List<Pair<Climate.ParameterPoint, T>> values) {
        if (values.isEmpty()) {
          throw new IllegalArgumentException("Need at least one value to build the search tree.");

@@ -5,6 +5,15 @@
 Climate::Parameter Climate::Parameter::span(const Climate::Parameter& other) const {
     return { std::min(min, other.min), std::max(max, other.max) };
 }
+long long int Climate::Parameter::distance(const long long int& target) const {
+    long long int above = target - max;
+    long long int below = min - target;
+    if (above > 0ll)
+        return above;
+    return std::max(below, 0ll);
+}
+
+
 // see Climate.Parameter.parameterSpace function in net.minecraft.world.level.biome.Climate
 std::vector<Climate::Parameter> Climate::ParameterPoint::parameterSpace() const {
     return { temperature, humidity, continentalness, erosion, depth, weirdness, { offset, offset } };
@@ -16,6 +25,10 @@ Climate::TargetPoint::TargetPoint(const long long int& _temperature, const long 
 Climate::TargetPoint::TargetPoint(const float& _temperature, const float& _humidity, const float& _continentalness, const float& _erosion, const float& _depth, const float& _weirdness)
     : temperature((long long int)(_temperature * 10000.0f)), humidity((long long int)(_humidity * 10000.0f)), continentalness((long long int)(_continentalness * 10000.0f)), erosion((long long int)(_erosion * 10000.0f)), depth((long long int)(_depth * 10000.0f)), weirdness((long long int)(_weirdness * 10000.0f))
 {}
+// see Climate.TargetPoint.toParameterArray function in net.minecraft.world.level.biome.Climate
+std::vector<long long int> Climate::TargetPoint::toParameterArray() const {
+    return { temperature, humidity, continentalness, erosion, depth, weirdness };
+}
 
 
 // see Climate.RTree<T>.Node class in net.minecraft.world.level.biome.Climate
@@ -24,6 +37,14 @@ Climate::RTree_Biome::Node::Node(const std::vector<Climate::Parameter>& _paramet
 }
 Climate::RTree_Biome::Node::~Node() {
 
+}
+// see Climate.RTree.Node.distance function in net.minecraft.world.level.biome.Climate
+long long int Climate::RTree_Biome::Node::distance(const std::vector<long long int>& target) {
+    long long int distance = 0ll;
+    for (int i = 0; i < 7; i++) {
+        distance += std::pow(parameterSpace[i].distance(target[i]), 2);
+    }
+    return distance;
 }
 
 
@@ -34,7 +55,7 @@ Climate::RTree_Biome::Leaf::Leaf(const std::vector<Climate::Parameter>& _paramet
 Climate::RTree_Biome::Leaf::~Leaf() {
     
 }
-Climate::RTree_Biome::Leaf* Climate::RTree_Biome::Leaf::search_distance(std::vector<long long int> target, Climate::RTree_Biome::Leaf* candidate) {
+Climate::RTree_Biome::Leaf* Climate::RTree_Biome::Leaf::search(std::vector<long long int> target, Climate::RTree_Biome::Leaf* candidate) {
     return this;
 }
 
@@ -66,36 +87,55 @@ Climate::RTree_Biome::SubTree::~SubTree() {
 
 }
 //  see Climate.RTree<T>.SubTree.search function in net.minecraft.world.level.biome.Climate
-//      line 79
-Climate::RTree_Biome::Leaf* Climate::RTree_Biome::SubTree::search_distance(std::vector<long long int> target, Climate::RTree_Biome::Leaf* candidate) {
-    // TODO
-    return nullptr;
+Climate::RTree_Biome::Leaf* Climate::RTree_Biome::SubTree::search(std::vector<long long int> target, Climate::RTree_Biome::Leaf* candidate) {
+    long minDistance = FLT_MAX;//(candidate == nullptr) ? FLT_MAX : distanceMetric.distance(candidate, target);
+    Climate::RTree_Biome::Leaf* closestLeaf = candidate;
+    for (Climate::RTree_Biome::Node* child : children) {
+        long childDistance = child->distance(target);
+        if (minDistance > childDistance) {
+            Climate::RTree_Biome::Leaf* leaf = child->search(target, closestLeaf);
+            long leafDistance = (child == leaf) ? childDistance : leaf->distance(target);
+            if (minDistance > leafDistance) {
+                minDistance = leafDistance;
+                closestLeaf = leaf;
+            } 
+        } 
+    } 
+    return closestLeaf;
 }
 
 
 //  see Climate.RTree<T>.Leaf class in net.minecraft.world.level.biome.Climate
 Climate::RTree_Biome::RTree_Biome(Climate::RTree_Biome::Node* _root) : root(_root) {
 }
-//  see Climate.RTree<T>.sort function in net.minecraft.world.level.biome.Climate
-//      line 141
-void Climate::RTree_Biome::sort(std::vector<Node*> children, const int& dimensions, const int& dimension, const bool& absolute) {
-    Comparator comp = comparator(dimension, absolute);
-    for (int d = 1; d < dimensions; d++) {
-        comp = comp.thenComparing(comparator((dimension + d) % dimensions, absolute));
-    }
-    //children.sort(comparator);// TODO
+//  see first Comparator.comparingLong function in Climate.RTree<T>.build function in net.minecraft.world.level.biome.Climate
+//      line 113
+void Climate::RTree_Biome::sort(std::vector<Node*>& children, const int& dimensions) {
+    // TODO
 }
 //  see Climate.RTree<T>.comparator function in net.minecraft.world.level.biome.Climate
 //      line 148
-Comparator Climate::RTree_Biome::comparator(const int& dimension, const bool& absolute) {
+//  and Climate.RTree<T>.sort function in net.minecraft.world.level.biome.Climate
+//      line 141
+void Climate::RTree_Biome::sort(std::vector<Node*>& children, const int& dimensions, const int& dimension, const bool& absolute) {
     // TODO
-    return Comparator();
 }
 //  see Climate.RTree<T>.bucketize function in net.minecraft.world.level.biome.Climate
-//      line 155
 std::vector<Climate::RTree_Biome::Node*> Climate::RTree_Biome::bucketize(const std::vector<Climate::RTree_Biome::Node*>& nodes) {
-    // TODO
-    return {};
+    std::vector<Node*> buckets;
+    std::vector<Node*> children;
+    int expectedChildrenCount = (int)std::pow(6.0, std::floor(std::log(nodes.size() - 0.01) / std::log(6.0)));// round to power of 6
+    for (Node* child : nodes) {
+        children.push_back(child);
+        if (children.size() >= expectedChildrenCount) {
+            buckets.push_back(new SubTree(children));
+            children.clear();
+        } 
+    } 
+    if (children.size() != 0) {
+        buckets.push_back(new SubTree(children));
+    }
+    return buckets;
 }
 //  see Climate.RTree<T>.cost function in net.minecraft.world.level.biome.Climate
 long long int Climate::RTree_Biome::cost(const std::vector<Climate::Parameter>& parameterSpace) {
@@ -105,22 +145,14 @@ long long int Climate::RTree_Biome::cost(const std::vector<Climate::Parameter>& 
     return result;
 }
 //  see Climate.RTree<T>.build function in net.minecraft.world.level.biome.Climate
-//      line 107
-Climate::RTree_Biome::Node* Climate::RTree_Biome::build(const int& dimensions, const std::vector<Node*>& children) {
+Climate::RTree_Biome::Node* Climate::RTree_Biome::build(const int& dimensions, std::vector<Node*>& children) {
     if (children.size() == 1)
         return children[0];
-    /*if (children.size() <= 6) {
-        children.sort(Comparator.comparingLong(leaf -> {
-                long totalMagnitude = 0L;
-                for (int d = 0; d < dimensions; d++) {
-                    Climate.Parameter parameter = leaf.parameterSpace[d];
-                    totalMagnitude += Math.abs((parameter.min() + parameter.max()) / 2L);
-                }
-                return totalMagnitude;
-            }));
+    if (children.size() <= 6) {
+        sort(children, dimensions);
         return new SubTree(children);
-    }*/
-    long minCost = 1000000000000000000000000000000.0;
+    }
+    long minCost = FLT_MAX;
     int minDimension = -1;
     std::vector<Node*> minBuckets;
     for (int d = 0; d < dimensions; d++) {
@@ -145,10 +177,9 @@ Climate::RTree_Biome Climate::RTree_Biome::create(const std::vector<std::pair<Pa
     return Climate::RTree_Biome(build(7, children));
 }
 //  see Climate.RTree<T>.search function in net.minecraft.world.level.biome.Climate
-//      line 197
-Biome Climate::RTree_Biome::search_distance(const TargetPoint& target) {
-    // TODO
-    return "";
+Biome Climate::RTree_Biome::search(const TargetPoint& target) {
+    lastResult = root->search(target.toParameterArray(), lastResult);
+    return lastResult->value;
 }
 
 
@@ -159,7 +190,7 @@ Biome Climate::ParameterList_Biome::findValue(const TargetPoint& target) {
     return findValueIndex(target);
 }
 Biome Climate::ParameterList_Biome::findValueIndex(const TargetPoint& target) {
-    return index.search_distance(target);
+    return index.search(target);
 }
 
 

@@ -4,16 +4,12 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <cfloat>// for FLT_MAX
 #include "MinecraftLib.h"
 #include "Random.h"
 
 #define Biome std::string
 
-class Comparator {
-    public:
-    Comparator() {};
-    Comparator thenComparing(const Comparator& comp) { return {}; }
-};
 class Climate {
     public:
     Climate() {};
@@ -21,6 +17,7 @@ class Climate {
         long long int min;
         long long int max;
         Parameter span(const Parameter& other) const;
+        long long int distance(const long long int& target) const;
     };
     struct ParameterPoint {
         Parameter temperature;
@@ -42,17 +39,19 @@ class Climate {
         public:
         TargetPoint(const long long int& _temperature, const long long int& _humidity, const long long int& _continentalness, const long long int& _erosion, const long long int& _depth, const long long int& _weirdness);
         TargetPoint(const float& _temperature, const float& _humidity, const float& _continentalness, const float& _erosion, const float& _depth, const float& _weirdness);
+        std::vector<long long int> toParameterArray() const;
     };
     class RTree_Biome {
         public:
         class Node;
+        class Leaf;
         private:
         Node* root;
+        Leaf* lastResult = nullptr;
         public:
-        class Leaf;
         class Node {
-            std::vector<Parameter> parameterSpace;
             protected:
+            std::vector<Parameter> parameterSpace;
             Node(const std::vector<Parameter>& _parameterSpace);
             Node(const Node& copy) = delete;
             Node(Node&& move) = delete;
@@ -60,7 +59,8 @@ class Climate {
             Node& operator=(Node&& move) = delete;
             public:
             virtual ~Node();
-            virtual Leaf* search_distance(std::vector<long long int> target, Leaf* candidate) = 0;
+            long long int distance(const std::vector<long long int>& target);
+            virtual Leaf* search(std::vector<long long int> target, Leaf* candidate) = 0;
             friend RTree_Biome;
         };
         class Leaf : Node {
@@ -73,7 +73,7 @@ class Climate {
             Leaf& operator=(Leaf&& move) = delete;
             public:
             virtual ~Leaf();
-            virtual Leaf* search_distance(std::vector<long long int> target, Leaf* candidate);
+            virtual Leaf* search(std::vector<long long int> target, Leaf* candidate);
             friend RTree_Biome;
         };
         static std::vector<Parameter> buildParameterSpace(const std::vector<Climate::RTree_Biome::Node*>& children);
@@ -88,18 +88,18 @@ class Climate {
             SubTree& operator=(SubTree&& move) = delete;
             public:
             virtual ~SubTree();
-            virtual Leaf* search_distance(std::vector<long long int> target, Leaf* candidate);
+            virtual Leaf* search(std::vector<long long int> target, Leaf* candidate);
             friend RTree_Biome;
         };
         RTree_Biome(Node* _root);
-        static void sort(std::vector<Node*> children, const int& dimensions, const int& dimension, const bool& absolute);
-        static Comparator comparator(const int& dimension, const bool& absolute);
+        static void sort(std::vector<Node*>& children, const int& dimensions);
+        static void sort(std::vector<Node*>& children, const int& dimensions, const int& dimension, const bool& absolute);
         static std::vector<Node*> bucketize(const std::vector<Node*>& nodes);
-        static Node* build(const int& dimensions, const std::vector<Node*>& values);
+        static Node* build(const int& dimensions, std::vector<Node*>& values);
         static long long int cost(const std::vector<Parameter>& parameterSpace);
         public:
         static RTree_Biome create(const std::vector<std::pair<ParameterPoint, Biome>> values);
-        Biome search_distance(const TargetPoint& target);
+        Biome search(const TargetPoint& target);
     };
     class ParameterList_Biome {
         std::vector<std::pair<ParameterPoint, Biome>> values;
