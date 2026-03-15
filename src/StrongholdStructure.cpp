@@ -590,9 +590,11 @@ BoundingBox getBoundingBox(std::vector<StructurePiece*>& builder) {
     for (size_t i = 1; i < builder.size(); i++) outBox.encompass(builder[i]->boundingBox);
     return outBox;
 }
+// StructurePiecesBuilder.offsetPiecesVertically function in net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder
 void offsetPiecesVertically(std::vector<StructurePiece*>& builder, const int& yAmount) {
     for (size_t i = 0; i < builder.size(); i++) builder[i]->boundingBox.move({0, yAmount, 0});
 }
+// StructurePiecesBuilder.moveBelowSeaLevel function in net/minecraft/world/level/levelgen/structure/pieces/StructurePiecesBuilder
 int moveBelowSeaLevel(std::vector<StructurePiece*>& builder, const int& seaLevel, const int& minY, LCG& rand, const int& offset) {
     int maxY = seaLevel - offset;
     BoundingBox boundingBox = getBoundingBox(builder);
@@ -603,6 +605,7 @@ int moveBelowSeaLevel(std::vector<StructurePiece*>& builder, const int& seaLevel
     offsetPiecesVertically(builder, dy);
     return dy;
 }
+// StrongholdStructure.generatePieces function in net/minecraft/world/level/levelgen/structure/structures/StrongholdStructure
 OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSeed, const ChunkPos& chunk, const bool& debug) {
     std::vector<StructurePiece*> builder;
     LCG rand(0);
@@ -610,7 +613,6 @@ OwningNullable<StartEndBoxes> getPortalRoomPosition(const long long int& worldSe
     int tries = 0;
     Pos startPos = chunk.getOffsetPos({ 2, 0, 2 });
     do {
-        //if (debug && (tries % 500 == 0)) std::cout << "attempt#" << (tries + 1) << '\n';
         for (size_t j = 0; j < builder.size(); j++)
             delete builder[j];
         builder.clear();

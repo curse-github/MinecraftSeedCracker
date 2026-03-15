@@ -1,8 +1,8 @@
 #include "Random.h"
 
-#pragma region Random
 
 #pragma region rand helpers
+
 unsigned long long int modInverse(unsigned long long int x, unsigned long long int y) {
     const unsigned long long int y_0 = y;
     unsigned long long int q = 0;
@@ -39,99 +39,33 @@ unsigned long long int geom(unsigned long long int a, unsigned long long int n) 
     return geom;
 }
 
-const unsigned long long int rand_seed_0 = 25214903917ull;
-const unsigned long long int rand_seed_neg_1 = 107038380838084ull;
-const unsigned long long int rand_seed_neg_2 = 120323824315451ull;
-const unsigned long long int rand_seed_neg_3 = 164311266871034ull;
-const unsigned long long int rand_seed_neg_4 = 41012168809809ull;
-const unsigned long long int rand_seed_neg_5 = 240144965573432ull;
-const unsigned long long int rand_seed_neg_6 = 205933732203103ull;
-const unsigned long long int rand_seed_neg_7 = 252022095509006ull;
-const unsigned long long int rand_seed_neg_8 = 61220665793749ull;
-const unsigned long long int rand_seed_neg_9 = 158745686432556ull;
 #pragma endregion rand helpers
 
-long long int Random::next() {
-    return nextSeed();
-}
-// see implementation of BitRandomSource.nextInt() in BitRandomSource
-int Random::nextInt() {
-    return static_cast<int>(next(32));
-}
-// see implementation of BitRandomSource.nextInt(int bound) in BitRandomSource
-int Random::nextInt(const unsigned int& bound) {
-    int modulo = 0;
-    int sample = 0;
-    if ((bound & (bound - 1)) == 0) return (int)((bound * next(31)) >> 31);
-    do {
-        sample = (int)next(31);
-        modulo = sample % bound;
-    } while ((sample - modulo + (bound - 1)) < 0);
-    return modulo;
-}
-// see implementation of BitRandomSource.nextLong() in BitRandomSource
-long long int Random::nextLong() {
-    int upper = next(32);
-    int lower = next(32);
-    return ((long long int)upper << 32ull) + lower;
-}
-// see implementation of BitRandomSource.nextBoolean() in BitRandomSource
-bool Random::nextBoolean() {
-    return next(1) != 0;
-}
-// see implementation of BitRandomSource.nextFloat() in BitRandomSource
-float Random::nextFloat() {
-    return next(24) * 5.9604645E-8f;
-}
-// see implementation of BitRandomSource.nextDouble() in BitRandomSource
-double Random::nextDouble() {
-    return (((unsigned long long int)next(26) << 27ll) + (unsigned long long int)next(27)) * 1.1102230246251565E-16;
-}
-// see ChunkRandom.setCarverSeed function in ChunkRandom.java
-long long int Random::getCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
+#pragma region BitRandomSource
+
+long long int BitRandomSource::getCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
     LCG rand(worldSeed);
     long long int xScale = rand.nextLong();
     long long int zScale = rand.nextLong();
     return (chunkX * xScale) ^ (chunkZ * zScale) ^ worldSeed;
 }
-long long int Random::getCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
+long long int BitRandomSource::getCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
     return getCarverSeed(worldSeed, chunk.x, chunk.z);
 }
-// see StructurePiece.getRandomHorizontalDirection function in StructurePiece.java
-Direction getRandomHorizontalDirection(Random& rand) {
+Direction getRandomHorizontalDirection(BitRandomSource& rand) {
     return HorizontalDirections[rand.nextInt(4)];
 }
 
+#pragma endregion BitRandomSource
+
 #pragma region LCG
-void LCG::setSeed(const long long int& _seed) {
-    count = 0;
-    seed = (_seed ^ a) & (m - 1);
-}
-// see ChunkRandom.setCarverSeed function in ChunkRandom.java
-void LCG::setCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
-    setSeed(worldSeed);
-    long long int xScale = nextLong();
-    long long int zScale = nextLong();
-    setSeed((chunkX * xScale) ^ (chunkZ * zScale) ^ worldSeed);
-}
-void LCG::setCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
-    setCarverSeed(worldSeed, chunk.x, chunk.z);
-}
-// see CheckedRandom.next(int bits) in CheckedRandom.java
-long long int LCG::next(const unsigned int& bits) {
-    return nextSeed() >> (48 - bits);
-}
-long long int LCG::currentSeed() {
-    if (debug) std::cout << count << ": " << seed << '\n';
-    return seed;
-}
+
 // new_seed = ((a * seed) + b) % m
 long long int LCG::nextSeed() {
     seed *= a;
     seed += b;
     seed &= m-1;
     count++;
-    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // new_seed = ((a * seed) + b) % m
@@ -160,7 +94,6 @@ long long int LCG::nextSeed(const unsigned int& steps) {
     seed += b * geom(a, steps);
     seed &= m - 1;
     count += steps;
-    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // seed = ((a * old_seed) + b) % m
@@ -172,7 +105,6 @@ long long int LCG::previousSeed() {
     seed *= inv_a;
     seed &= m-1;
     count--;
-    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
 // old_seed = (seed - b) * inv_a % m
@@ -190,17 +122,71 @@ long long int LCG::previousSeed(const unsigned int& steps) {
     seed *= fastExp(inv_a, steps);
     seed &= m-1;
     count -= steps;
-    if (debug) std::cout << count << ": " << seed << '\n';
     return seed;
 }
-// see implementation of CheckedRandom.split() in CheckedRandom.java
+
+void LCG::setSeed(const long long int& _seed) {
+    count = 0;
+    seed = (_seed ^ a) & (m - 1);
+}
+void LCG::setCarverSeed(const long long int& worldSeed, const int& chunkX, const int& chunkZ) {
+    setSeed(worldSeed);
+    long long int xScale = nextLong();
+    long long int zScale = nextLong();
+    setSeed((chunkX * xScale) ^ (chunkZ * zScale) ^ worldSeed);
+}
+void LCG::setCarverSeed(const long long int& worldSeed, const ChunkPos& chunk) {
+    setCarverSeed(worldSeed, chunk.x, chunk.z);
+}
+
+// see LegacyRandomSource.next function in net.minecraft.world.level.levelgen.LegacyRandomSource
+int LCG::next(const int& bits) {
+    return nextSeed() >> (48 - bits);
+}
+// see BitRandomSource.nextInt() function in net.minecraft.world.level.levelgen.BitRandomSource
+int LCG::nextInt() {
+    return next(32);
+}
+// see BitRandomSource.nextInt(int) function in net.minecraft.world.level.levelgen.BitRandomSource
+int LCG::nextInt(const int& bound) {
+    int modulo = 0;
+    int sample = 0;
+    if ((bound & (bound - 1)) == 0) return (int)((bound * next(31)) >> 31);
+    do {
+        sample = (int)next(31);
+        modulo = sample % bound;
+    } while ((sample - modulo + bound - 1) < 0);
+    return modulo;
+}
+// see BitRandomSource.nextLong function in net.minecraft.world.level.levelgen.BitRandomSource
+long long int LCG::nextLong() {
+    int upper = next(32);
+    int lower = next(32);
+    return ((long long int)upper << 32ull) + lower;
+}
+// see BitRandomSource.nextBoolean function in net.minecraft.world.level.levelgen.BitRandomSource
+bool LCG::nextBoolean() {
+    return next(1) != 0;
+}
+// see BitRandomSource.nextFloat function in net.minecraft.world.level.levelgen.BitRandomSource
+float LCG::nextFloat() {
+    return next(24) * 5.9604645E-8f;
+}
+// see BitRandomSource.nextDouble function in net.minecraft.world.level.levelgen.BitRandomSource
+double LCG::nextDouble() {
+    unsigned long long int upper = (unsigned long long int)next(26);
+    unsigned long long int lower = (unsigned long long int)next(27);
+    return ((upper << 27ll) | lower) * 1.1102230246251565E-16;
+}
+
 LCG LCG::split() {
     return LCG(nextLong(), a, b, m);
 }
-// see implementation of CheckedRandom.nextSplitter() in CheckedRandom.java
 LCGSplitter LCG::nextSplitter() {
     return LCGSplitter(nextLong());
 }
+
+#pragma region splitter
 
 int hashString(const std::string& str) {
     int value = 0;
@@ -217,14 +203,15 @@ LCGSplitter& LCGSplitter::operator=(const LCGSplitter& copy) {
     seed = copy.seed;
     return *this;
 }
-// see CheckedRandom.Splitter.split(string) function in CheckedRandom.java
 LCG LCGSplitter::split(const std::string& _seed) {
     return LCG(seed ^ hashString(_seed));
 }
-// see CheckedRandom.Splitter.split(long) function in CheckedRandom.java
 LCG LCGSplitter::split(const long long int& _seed) {
     return LCG(_seed);
 }
+
+#pragma endregion splitter
+
 #pragma endregion LCG
 
 #pragma region Xoroshiro
@@ -233,15 +220,10 @@ long long int mix(unsigned long long int seed) {
     seed = (seed ^ seed >> 27ll) * -7723592293110705685ll;
     return seed ^ seed >> 31ll;
 }
-Xoroshiro::Xoroshiro(const long long int& seed) {
-    seedLo = seed ^ 0x6A09E667F3BCC909ll;
-    seedHi = mix(seedLo + -7046029254386353131ll);
-    seedLo = mix(seedLo);
-}
 Xoroshiro::Xoroshiro(const long long int& _seedHi, const long long int& _seedLo) : seedHi(_seedHi), seedLo(_seedLo) {
     if ((_seedHi | _seedLo) == 0L) {
-        seedLo = -7046029254386353131L;
-        seedHi = 7640891576956012809L;
+        seedLo = -7046029254386353131ll;
+        seedHi = 7640891576956012809ll;
     }
 }
 Xoroshiro& Xoroshiro::operator=(const Xoroshiro& copy) {
@@ -249,69 +231,90 @@ Xoroshiro& Xoroshiro::operator=(const Xoroshiro& copy) {
     seedLo = copy.seedLo;
     return *this;
 }
-// see Xoroshiro128PlusPlusRandom.setSeed function in Xoroshiro128PlusPlusRandom.java
-// see RandomSeed.createXoroshiroSeed statuc function in RandomSeed.java
-//      see RandomSeed.createUnmixedXoroshiroSeed statuc function in RandomSeed.java
-//          see RandomSeed.XoroshiroSeed.mix function in RandomSeed.java
-//              see RandomSeed.mixStafford13 static function in RandomSeed.java
-// see Xoroshiro128PlusPlusRandomImpl constructor in Xoroshiro128PlusPlusRandomImpl.java
-void Xoroshiro::setSeed(const long long int& seed) {
-    seedLo = seed ^ 0x6A09E667F3BCC909ll;
-    seedHi = mix(seedLo + -7046029254386353131ll);
-    seedLo = mix(seedLo);
-}
-void Xoroshiro::setSeed(const long long int& _seedHi, const long long int& _seedLo) {
-    seedHi = _seedHi;
-    seedLo = _seedLo;
-    if ((_seedHi | _seedLo) == 0L) {
-        seedLo = -7046029254386353131L;
-        seedHi = 7640891576956012809L;
-    }
-}
-// see CheckedRandom.next(int bits) in CheckedRandom.java
-long long int Xoroshiro::next(const unsigned int& bits) {
-    return nextSeed() >> (64ll - bits);
-}
-unsigned long long int intToLong(const unsigned int& num) {
-    return ((long)num) & 0xFFFFFFFFll;
-}
-unsigned int intToLongMod(const unsigned int& a, const unsigned int& b) {
-    return intToLong(a) % intToLong(b);
-}
-int Xoroshiro::nextInt(const unsigned int& bound) {
-    long long int _2 = intToLong(nextSeed()) * ((long long int)bound);
-    long long int _3 = intToLong(_2);
-    if (_3 < bound) {
-        int _4 = intToLongMod(~bound + 1, bound);
-        while (_3 < _4) {
-            _2 = intToLong(nextSeed()) * ((long long int)bound);
-            _3 = _3 = _2 & 0xFFFFFFFFll;
-        }
-    }
-    return (int)(_2 >> 32ll);
-}
-long long int Xoroshiro::nextLong() {
-    return nextSeed();
-}
-
-long long int rotateLeft(const long long int& num, const long long int& amount) {
-    return (num << amount) | (num >> (64ll - amount));
-}
+// see Xoroshiro128PlusPlus.nextLong function in net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus
 long long int Xoroshiro::nextSeed() {
-    long long int _0 = seedLo;
-    long long int _1 = seedHi;
-    long long int _2 = rotateLeft(_0 + _1, 17ll) + _0;
-    seedLo = rotateLeft(_0, 49ll) ^ (_1 ^= _0) ^ _1 << 21ll;
-    seedHi = rotateLeft(_1, 28ll);
-    return _2;
+    long s0 = seedLo;
+    long s1 = seedHi;
+    long result = rotateLeft(s0 + s1, 17) + s0;
+    s1 ^= s0;
+    seedLo = rotateLeft(s0, 49) ^ s1 ^ s1 << 21;
+    seedHi = rotateLeft(s1, 28);
+    return result;
 }
 long long int Xoroshiro::nextSeed(const unsigned int& steps) {
     for (size_t i = 0; i < steps-1; i++) nextSeed();
     return nextSeed();
 }
+
+// see Xoroshiro128PlusPlus.Xoroshiro128PlusPlus() function in net.minecraft.world.level.levelgen.Xoroshiro128PlusPlus
+void Xoroshiro::setSeed(const long long int& _seedHi, const long long int& _seedLo) {
+    seedHi = _seedHi;
+    seedLo = _seedLo;
+    if ((_seedHi | _seedLo) == 0L) {
+        seedLo = -7046029254386353131ll;
+        seedHi = 7640891576956012809ll;
+    }
+}
+
+// see XoroshiroRandomSource.nextInt() function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+int Xoroshiro::nextInt() {
+    return (int)nextLong();
+}
+unsigned long long int toUnsignedLong(const unsigned int& num) {
+    return ((long long int)num) & 0xFFFFFFFFll;
+}
+unsigned long long int toUnsignedLong(const long long int& num) {
+    return num & 0xFFFFFFFFll;
+}
+unsigned int remainderUnsigned(const unsigned int& a, const unsigned int& b) {
+    return toUnsignedLong(a) % toUnsignedLong(b);
+}
+// see XoroshiroRandomSource.nextInt(int) function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+int Xoroshiro::nextInt(const int& bound) {
+    long long int randomBits = ((long long int)nextSeed()) & 0xFFFFFFFFll;// Integer.toUnsignedLong
+    long long int multipliedRandomBits = randomBits * (long long int)bound;
+    long long int fractionalPart = multipliedRandomBits & 0xFFFFFFFFll;
+    if (fractionalPart < bound) {
+        int unbiasedBucketsStartIndex = remainderUnsigned((bound ^ 0xFFFFFFFFll) + 1, bound);
+        while (fractionalPart < unbiasedBucketsStartIndex) {
+            randomBits = ((long long int)nextSeed()) & 0xFFFFFFFFll;
+            multipliedRandomBits = randomBits * (long long int)bound;
+            fractionalPart = multipliedRandomBits & 0xFFFFFFFFll;
+        }
+    }
+    return (int)(multipliedRandomBits >> 32ll);
+}
+// see XoroshiroRandomSource.nextLong function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+long long int Xoroshiro::nextLong() {
+    return nextSeed();
+}
+// see XoroshiroRandomSource.nextBoolean function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+bool Xoroshiro::nextBoolean() {
+    return (nextLong() & 0x1ll) != 0ll;
+}
+// see XoroshiroRandomSource.nextBoolean function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+float Xoroshiro::nextFloat() {
+    return nextBits(24) * 5.9604645E-8f;
+}
+// see XoroshiroRandomSource.nextBoolean function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+double Xoroshiro::nextDouble() {
+    return nextBits(53) * 1.1102230246251565E-16;
+}
+
+long long int rotateLeft(const long long int& num, const long long int& amount) {
+    return (num << amount) | (num >> (64ll - amount));
+}
+
+long long int Xoroshiro::nextBits(const int& bits) {
+    return nextSeed() >> (64ll - bits);
+}
+
 Xoroshiro Xoroshiro::split() {
     return Xoroshiro(nextLong(), nextLong());
 }
+
+#pragma region splitter
+
 XoroshiroSplitter Xoroshiro::nextSplitter() {
     return XoroshiroSplitter(nextLong(), nextLong());
 }
@@ -322,30 +325,39 @@ XoroshiroSplitter& XoroshiroSplitter::operator=(const XoroshiroSplitter& copy) {
     seedHi = copy.seedHi;
     return *this;
 }
-//  see Xoroshiro128PlusPlusRandom.RandomSplitter.split function in Xoroshiro128PlusPlusRandom.java
-//      see RandomSeed.createXoroshiroSeed function in RandomSeed.java
-//          see RandomSeed.XoroshiroSeed.split function in RandomSeed.java
-Xoroshiro XoroshiroSplitter::split(const std::string& seed) {
+// see XoroshiroRandomSource.XoroshiroPositionalRandomFactory.at function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+/*Xoroshiro XoroshiroSplitter::at(const int& x, const int& y, const int& z) {
+    long positionalSeed = 0;//Mth.getSeed(x, y, z);
+    long randomSeed = positionalSeed ^ seedLo;
+    return Xoroshiro(randomSeed, seedHi);
+}*/
+// see XoroshiroRandomSource.XoroshiroPositionalRandomFactory.fromHashOf function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+Xoroshiro XoroshiroSplitter::fromHashOf(const std::string& seed) {
     std::vector<unsigned int> md5 = md5Raw((unsigned char*)seed.data(), seed.size());
     unsigned long long int tmpLo = ((((unsigned long long int)md5[0]) << 32ull) | (unsigned long long int)md5[1]);
     unsigned long long int tmpHi = ((((unsigned long long int)md5[2]) << 32ull) | (unsigned long long int)md5[3]);
     return Xoroshiro(tmpLo ^ seedLo, tmpHi ^ seedHi);
 }
-Xoroshiro XoroshiroSplitter::split(const long long int& seed) {
+// see XoroshiroRandomSource.XoroshiroPositionalRandomFactory.fromSeed function in net.minecraft.world.level.levelgen.XoroshiroRandomSource
+Xoroshiro XoroshiroSplitter::fromSeed(const long long int& seed) {
     return Xoroshiro(seed ^ seedLo, seed ^ seedHi);
 }
+
+#pragma endregion splitter
+
 #pragma endregion Xoroshiro
 
+#pragma region tests
 
 // used https://onecompiler.com/java to get values and the following code
 /*
 import java.util.Scanner;
-import java.util.Random;
+import java.util.BitRandomSource;
 public class RandomNumbers {
   public static void main(String[] args) {
     int num = 30;
     long world_seed = 8606738414634885904L;
-    Random random = new Random();
+    BitRandomSource random = new BitRandomSource();
     random.setSeed(world_seed);
     long carver_seed = ((long)15 * random.nextLong()) ^ ((long)15 * random.nextLong()) ^ world_seed;
     random.setSeed(carver_seed);
@@ -486,7 +498,8 @@ const long long int testValues3[90] = {
     -4589935837202980118,7561066201763648723,6280894568551754616,-3971984871524159835,3017400494401384848,8031341381972090527,-7107158343953755303,-3767072458830508680,-5025650851501546115,-3967074709380734918,6076425033111228448,431764091862982748,2484774843009156877,-2193965066575245041,-2953305156101582542,-1446907618438593064,7867488968799327054,3115504548522610270,8448057662895493608,-4150794770841613435,6614828286402829954,7431201225841590714,8141513285486863374,-6663724467157189488,-4083805021293590879,6099382375024269196,2170050061616351846,2391657938607341628,-5810820778434464300,754713792011404686,
     1279575472323729037,5831785309522532696,5813633651739524245,-6117803810242137254,-2853144466140541760,-6366704064905785646,-5823770826205225585,5809384890054044572,-7250012421785923961,8061529794050959061,-2981002930490528716,-8370059088092764036,6755894889892008048,-8779265785458571434,-6368290290359188764,7098003342591624979,-1292732229196440113,-1592274851480480594,768784944199875334,-6506071909234252519,7571890113224650043,7194230221678762520,248572438436743553,-6350033111775735444,7014511571296437519,1795365334861431348,6214137464638876483,-3023325454433121136,-3993905028804792342,5351395591634444167
 };
-void testRand(const long long int& world_seed) {
+void testRand() {
+    long long int world_seed = 8606738414634885904ull;
     bool allRight = true;
     int num = 30;
     LCG rand(world_seed);
@@ -548,341 +561,4 @@ void testRand(const long long int& world_seed) {
     else std::cout << "Some random values were not correct.\n";
 }
 
-#pragma endregion Random
-
-#pragma region Noise
-// see PERLIN_GRADIENTS constant in SimplexNoiseSampler.java
-const int PERLIN_GRADIENTS[16][3] = {{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {1, 0, 1}, {-1, 0, 1}, {1, 0, -1}, {-1, 0, -1}, {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1}, {1, 1, 0}, {0, -1, 1}, {-1, 1, 0}, {0, -1, -1}};
-// see PerlinNoiseSample.dot function in PerlinNoiseSample.java
-double dot(const int* gradient, const Vec3D& position) {
-    return (double)gradient[0] * position.x + (double)gradient[1] * position.y + (double)gradient[2] * position.z;
-}
-// see MathHelper.perlinFade function in MathHelper.java
-double perlinFade(double value) {
-    return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
-}
-// see MathHelper.perlinFadeDerivative function in MathHelper.java
-double perlinFadeDerivative(double value) {
-    return 30.0 * value * value * (value - 1.0) * (value - 1.0);
-}
-// see MathHelper.lerp function in MathHelper.java
-double lerp(const double& x, const double& X, const double& t) {
-    return x + (t * (X - x));
-}
-// see MathHelper.lerp2 function in MathHelper.java
-double lerp2(const double& xy, const double& Xy, const double& xY, const double& XY, const double& tX, const double& tY) {
-    return lerp(lerp(xy, Xy, tX), lerp(xY, XY, tX), tY);
-}
-double lerp2(const double& xy, const double& Xy, const double& xY, const double& XY, const Vec2D& t) {
-    return lerp(lerp(xy, Xy, t.x), lerp(xY, XY, t.x), t.z);
-}
-// see MathHelper.lerp3 function in MathHelper.java
-double lerp3(const double& xyz, const double& Xyz, const double& xYz, const double& XYz, const double& xyZ, const double& XyZ, const double& xYZ, const double& XYZ, const double& tX, const double& tY, const double& tZ) {
-    return lerp(lerp2(xyz, Xyz, xYz, XYz, tX, tY), lerp2(xyZ, XyZ, xYZ, XYZ, tX, tY), tZ);
-}
-double lerp3(const double& xyz, const double& Xyz, const double& xYz, const double& XYz, const double& xyZ, const double& XyZ, const double& xYZ, const double& XYZ, const Vec3D& t) {
-    return lerp(lerp2(xyz, Xyz, xYz, XYz, t.x, t.y), lerp2(xyZ, XyZ, xYZ, XYZ, t.x, t.y), t.z);
-}
-
-#pragma region Perlin
-double PerlinNoise::sample(const double& x, const double& y, const double& z) const {
-    return sample(Vec3D(x, y, z), 0.0, 0.0);
-}
-double PerlinNoise::sample(const Vec3D& position) const {
-    return sample(position, 0.0, 0.0);
-}
-double PerlinNoise::sample(const double& x, const double& y, const double& z, const double& yScale, const double& yMax) const {
-    return sample(Vec3D(x, y, z), yScale, yMax);
-}
-double PerlinNoise::sample(Vec3D V, const double& yScale, const double& yMax) const {
-    V = V + origin;
-    const Vec3 sectionV(floor(V.x), floor(V.y), floor(V.z));
-    Vec3D localV = V - sectionV;
-    double offsetY = 0;
-    if (yScale != 0) {
-        bool needsClamp = (yMax >= 0) && (yMax < localV.y);
-        double clampedY = needsClamp ? yMax : localV.y;
-        offsetY = floor((clampedY / yScale) + 1.0E-7) * yScale;// round to the nearest yScale
-    }
-    return sample(sectionV, localV - Vec3D(0, offsetY, 0), localV.y);
-}
-// see PerlinNoiseSample.sampleDerivative(double*3, double[]) function in PerlinNoiseSample.java
-double PerlinNoise::sampleDerivative(const double& x, const double& y, const double& z, std::vector<double>& idk) const {
-    return sampleDerivative(Vec3D(x, y, z), idk);
-}
-double PerlinNoise::sampleDerivative(const Vec3D& V, std::vector<double>& idk) const {
-    const Vec3 fV(floor(V.x), floor(V.y), floor(V.z));
-    const Vec3 sectionV(fV.x & 0xFF, fV.y & 0xFF, fV.z & 0xFF);
-    Vec3D localV = V - fV;
-    return sampleDerivative(sectionV, localV, idk);
-}
-// see PerlinNoiseSample.sample(double*7) function in PerlinNoiseSample.java, but thats broken due to decompilation artifacts :(
-// https://rtouti.github.io/graphics/perlin-noise-algorithm helped a lot
-double PerlinNoise::sample(const Vec3& sectionV, const Vec3D& localV, const double& fadeLocalY) const {
-    const int Mx = map(sectionV.x);
-    const int MX = map(sectionV.x + 1);
-    const int Mxy = map(Mx + sectionV.y    );
-    const int MXy = map(MX + sectionV.y    );
-    const int MxY = map(Mx + sectionV.y + 1);
-    const int MXY = map(MX + sectionV.y + 1);
-    const double xyz = PerlinNoise::grad(map(Mxy + sectionV.z    ), localV + Vec3D( 0,  0,  0));
-    const double Xyz = PerlinNoise::grad(map(MXy + sectionV.z    ), localV + Vec3D(-1,  0,  0));
-    const double xYz = PerlinNoise::grad(map(MxY + sectionV.z    ), localV + Vec3D( 0, -1,  0));
-    const double XYz = PerlinNoise::grad(map(MXY + sectionV.z    ), localV + Vec3D(-1, -1,  0));
-    const double xyZ = PerlinNoise::grad(map(Mxy + sectionV.z + 1), localV + Vec3D( 0,  0, -1));
-    const double XyZ = PerlinNoise::grad(map(MXy + sectionV.z + 1), localV + Vec3D(-1,  0, -1));
-    const double xYZ = PerlinNoise::grad(map(MxY + sectionV.z + 1), localV + Vec3D( 0, -1, -1));
-    const double XYZ = PerlinNoise::grad(map(MXY + sectionV.z + 1), localV + Vec3D(-1, -1, -1));
-    return lerp3(xyz, Xyz, xYz, XYz, xyZ, XyZ, xYZ, XYZ, Vec3D(perlinFade(localV.x), perlinFade(fadeLocalY), perlinFade(localV.z)));
-}
-// see PerlinNoiseSample.sample(double*7) function in PerlinNoiseSample.java
-double PerlinNoise::sampleDerivative(const Vec3& sectionV, const Vec3D& localV, std::vector<double>& _6) const {
-    const int Mx = map(sectionV.x);
-    const int MX = map(sectionV.x + 1);
-    const int Mxy = map(Mx + sectionV.y    );
-    const int MXy = map(MX + sectionV.y    );
-    const int MxY = map(Mx + sectionV.y + 1);
-    const int MXY = map(MX + sectionV.y + 1);
-    const int* Gxyz = PERLIN_GRADIENTS[map(Mxy + sectionV.z    )];
-    const int* GXyz = PERLIN_GRADIENTS[map(MXy + sectionV.z    )];
-    const int* GxYz = PERLIN_GRADIENTS[map(MxY + sectionV.z    )];
-    const int* GXYz = PERLIN_GRADIENTS[map(MXY + sectionV.z    )];
-    const int* GxyZ = PERLIN_GRADIENTS[map(Mxy + sectionV.z + 1)];
-    const int* GXyZ = PERLIN_GRADIENTS[map(MXy + sectionV.z + 1)];
-    const int* GxYZ = PERLIN_GRADIENTS[map(MxY + sectionV.z + 1)];
-    const int* GXYZ = PERLIN_GRADIENTS[map(MXY + sectionV.z + 1)];
-    const double xyz = dot(Gxyz, localV + Vec3D(-1, -1, -1));
-    const double Xyz = dot(GXyz, localV + Vec3D( 0, -1, -1));
-    const double xYz = dot(GxYz, localV + Vec3D(-1,  0, -1));
-    const double XYz = dot(GXYz, localV + Vec3D( 0,  0, -1));
-    const double xyZ = dot(GxyZ, localV + Vec3D(-1, -1,  0));
-    const double XyZ = dot(GXyZ, localV + Vec3D( 0, -1,  0));
-    const double xYZ = dot(GxYZ, localV + Vec3D(-1,  0,  0));
-    const double XYZ = dot(GXYZ, localV);
-    const Vec3D fadeV(perlinFade(localV.x), perlinFade(localV.y), perlinFade(localV.z));
-    _6[0] += lerp3(Gxyz[0], GXyz[0], GxYz[0], GXYz[0], GxyZ[0], GXyZ[0], GxYZ[0], GXYZ[0], fadeV);
-    _6[1] += lerp3(Gxyz[1], GXyz[1], GxYz[1], GXYz[1], GxyZ[1], GXyZ[1], GxYZ[1], GXYZ[1], fadeV);
-    _6[2] += lerp3(Gxyz[2], GXyz[2], GxYz[2], GXYz[2], GxyZ[2], GXyZ[2], GxYZ[2], GXYZ[2], fadeV);
-    _6[0] += lerp2(Xyz - xyz, XYz - xYz, XyZ - xyZ, XYZ - xYZ, fadeV.y, fadeV.z) * perlinFadeDerivative(localV.x);
-    _6[1] += lerp2(xYz - xyz, xYZ - xyZ, XYz - Xyz, XYZ - XyZ, fadeV.z, fadeV.x) * perlinFadeDerivative(localV.y);
-    _6[2] += lerp2(xyZ - xyz, XyZ - Xyz, xYZ - xYz, XYZ - XYz, fadeV.x, fadeV.y) * perlinFadeDerivative(localV.z);
-    return lerp3(xyz, Xyz, xYz, XYz, xyZ, XyZ, xYZ, XYZ, fadeV);
-}
-// see PerlinNoiseSample constructor in PerlinNoiseSample.java
-void PerlinNoise::init(Xoroshiro* rand) {
-    for (int i = 0; i < 256; i++)
-        permutation[i] = i;
-    for (int i = 0; i < 256; ++i) {
-        // swap values at index i and i+r in the array
-        std::swap(permutation[i], permutation[i + rand->nextInt(256 - i)]);
-    }
-    /*std::cout << "permutation table:";
-    for (size_t i = 0; i < 256; i++) {
-        if ((i&15) == 0) std::cout << '\n';
-        std::cout << (unsigned int)permutation[i] << " ";
-    }
-    std::cout << '\n';*/
-}
-// see PerlinNoiseSample.map function in PerlinNoiseSample.java
-int PerlinNoise::map(const int& input) const {
-    return permutation[input & 0xFF];
-}
-// see PerlinNoiseSample.grad function in PerlinNoiseSample.java
-double PerlinNoise::grad(const int& perm, const Vec3D& position) const {
-    return dot(PERLIN_GRADIENTS[perm & 0xF], position);
-}
-#pragma endregion Perlin
-
-long lfloor(const double& value) {
-    long long int tmp = (long long int)value;
-    return (value < tmp) ? tmp - 1 : tmp;
-}
-double maintainPrecision(double value) {
-    return value - (double)lfloor(value / 3.3554432E7 + 0.5) * 3.3554432E7;
-}
-#pragma region OctavePerlinNoise
-OctavePerlinNoise::OctavePerlinNoise(Xoroshiro* rand, const int& _firstOctave, const std::vector<double>& _amplitudes)
-    : firstOctave(_firstOctave), lacunarity(pow(2.0, firstOctave)), amplitudes(_amplitudes) {
-    persistence = (pow(2.0, amplitudes.size() - 1.0) / (pow(2.0, amplitudes.size()) - 1.0));
-    
-    XoroshiroSplitter splitter = rand->nextSplitter();
-    for (int i = 0; i < amplitudes.size(); ++i) {
-        if (amplitudes[i] == 0.0) continue;
-        Xoroshiro samplerRand = splitter.split("octave_" + std::to_string(firstOctave + i));
-        samplers.push_back(new PerlinNoise(&samplerRand));
-    }
-    // see OctavePerlinNoiseSampler.getTotalAmplitude in OctavePerlinNoiseSampler.java
-    double p = persistence;
-    maxValue = 0;
-    for (unsigned int i = 0; i < amplitudes.size(); ++i) {
-        maxValue += amplitudes[i] * 2.0 * p;
-        p /= 2.0;
-    }
-}
-OctavePerlinNoise::~OctavePerlinNoise() {
-    for (unsigned int i = 0; i < samplers.size(); i++)
-        delete samplers[i];
-}
-double OctavePerlinNoise::sample(const double& x, const double& y, const double& z) const {
-    double value = 0.0;
-    double l = lacunarity;
-    double p = persistence;
-    int idx = 0;
-    for (int i = 0; i < amplitudes.size(); ++i) {
-        if (amplitudes[i] != 0) {
-            double _11 = samplers[idx]->sample(maintainPrecision(x * l), maintainPrecision(y * l), maintainPrecision(z * l));
-            value += amplitudes[i] * p * _11;
-            idx++;
-        }
-        l *= 2.0;
-        p /= 2.0;
-    }
-    return value;
-}
-double OctavePerlinNoise::sample(const Vec3D& v) const {
-    return sample(v.x, v.y, v.z);
-}
-double OctavePerlinNoise::getMaxValue() const {
-    return maxValue;
-}
-#pragma endregion OctavePerlinNoise
-
-#pragma region DoublePerlinNoise
-DoublePerlinNoise::DoublePerlinNoise(Xoroshiro* rand, const int& firstOctave, const std::vector<double>& amplitudes)
-    : firstSampler(rand, firstOctave, amplitudes), secondSampler(rand, firstOctave, amplitudes) {
-    int bottomAmplitudeIdx = 100000000;
-    int TopAmplitudeIdx = -1;
-    for (size_t i = 0; i < amplitudes.size(); i++) {
-        if (amplitudes[i] == 0) continue;
-        bottomAmplitudeIdx = std::min(bottomAmplitudeIdx, static_cast<int>(i));
-        TopAmplitudeIdx = std::max(TopAmplitudeIdx, static_cast<int>(i));
-    }
-    amplitude = 1.6666666666666666 / (1.0 + 1.0 / (double)(TopAmplitudeIdx - bottomAmplitudeIdx + 1));
-    maxValue = (firstSampler.getMaxValue() + secondSampler.getMaxValue()) * amplitude;
-}
-double DoublePerlinNoise::sample(const double& x, const double& y, const double& z) const {
-    const double sample1 = firstSampler.sample(x, y, z);
-    const double sample2 = secondSampler.sample(x * 1.0181268882175227, y * 1.0181268882175227, z * 1.0181268882175227);
-    const double value = (sample1 + sample2) * amplitude;
-    return value;
-}
-double DoublePerlinNoise::sample(const Vec3D& v) const {
-    return sample(v.x, v.y, v.z);
-}
-double DoublePerlinNoise::getMaxValue() const {
-    return maxValue;
-}
-#pragma endregion DoublePerlinNoise
-
-#pragma region Simplex
-// see SimplexNoiseSampler.skew_2d constant in SimplexNoiseSampler.java
-const double skew_2d = 0.5 * (sqrt(3.0) - 1.0);// formula is (sqrt(n+1)-1)/n so n=2 -> (sqrt(3)-1)/2 and n=3 = (sqrt(4)-1)/3 or 1/3 or 0.33333333
-// see SimplexNoiseSampler.un_skew_2d constant in SimplexNoiseSampler.java
-const double un_skew_2d = (3.0 - sqrt(3.0)) / 6.0;// formula is (1-1/sqrt(n+1))/n so n=2 -> (1-1/sqrt(3))/2 or (3-sqrt(3))/6 and n=3 = (1-1/sqrt4))/3 = (1-0.5)/3 = 0.5/3 or 1/6 or 0.1666666
-
-// see SimplexNoiseSampler.sample(double*2) function in SimplexNoiseSampler.java, but thats broken due to decompilation artifacts :(
-double SimplexNoise::sample(const double& x, const double& z) const {
-    return sample(Vec2D(x, z));
-}
-// https://en.wikipedia.org/wiki/Simplex_noise helped a lot
-double SimplexNoise::sample(const Vec2D& V) const {
-    double skew = (V.x + V.z)*skew_2d;
-    const Vec2D Vp(V.x+skew, V.z+skew);
-    const Vec2 sectionV(floor(Vp.x), floor(Vp.z));
-    double unskew = (sectionV.x + sectionV.z)*un_skew_2d;
-    const Vec2D unsquewed(sectionV.x - unskew, sectionV.z - unskew);
-
-    const Vec2D internalV1 = V - unsquewed;
-    Vec2 vrt2(0, 0);// (1,0) or (0,1)
-    if (internalV1.x > internalV1.z) vrt2.x = 1;
-    else vrt2.z = 1;
-    const Vec2D internalV2 = internalV1 - vrt2 + Vec2D(un_skew_2d, un_skew_2d);
-    const Vec2D internalV3 = internalV1 + Vec2D(2*un_skew_2d - 1, 2*un_skew_2d - 1);
-
-    const Vec2 modSectionV(sectionV.x & 0xFF, sectionV.z & 0xFF);
-    return 70.0 * (
-        grad(map(modSectionV.x          + map(modSectionV.z         )) % 12, Vec3D(internalV1.x, internalV1.z, 0), 0.5) + 
-        grad(map(modSectionV.x + vrt2.x + map(modSectionV.z + vrt2.z)) % 12, Vec3D(internalV2.x, internalV2.z, 0), 0.5) + 
-        grad(map(modSectionV.x +      1 + map(modSectionV.z +      1)) % 12, Vec3D(internalV3.x, internalV3.z, 0), 0.5)
-    );
-}
-// see SimplexNoiseSampler.sample(double*3) function in SimplexNoiseSampler.java, but thats broken due to decompilation artifacts :(
-double SimplexNoise::sample(const double& x, const double& y, const double& z) const {
-    return sample(Vec3D(x, y, z));
-}
-// https://en.wikipedia.org/wiki/Simplex_noise helped a lot
-double SimplexNoise::sample(const Vec3D& V) const {
-    double skew = (V.x + V.z)*0.3333333333;
-    const Vec3D Vp(V.x+skew, V.y+skew, V.z+skew);
-    const Vec3 sectionV(floor(Vp.x), floor(Vp.y), floor(Vp.z));
-    double unskew = (sectionV.x + sectionV.z)*0.1666666666;
-    const Vec3D unsquewed(sectionV.x - unskew, sectionV.y - unskew, sectionV.z - unskew);
-
-    const Vec3D internalV1 = V - unsquewed;
-    Vec3 vrt2(0, 0, 0);// (1, 0, 0) or (0, 1, 0) or (0, 0, 1)
-    Vec3 vrt3(0, 0, 0);
-    if (internalV1.x > internalV1.y) {
-        if (internalV1.y > internalV1.z) {// x > y > z
-            vrt2.x = 1;
-            vrt3.x = 1;
-            vrt3.y = 1;
-        } else if (internalV1.x > internalV1.z) {// x > z > y
-            vrt2.x = 1;
-            vrt3.x = 1;
-            vrt3.z = 1;
-        } else {// z > x > y
-            vrt2.z = 1;
-            vrt3.x = 1;
-            vrt3.z = 1;
-        }
-    } else if (internalV1.y < internalV1.z) {// z > y > x
-        vrt2.z = 1;
-        vrt3.y = 1;
-        vrt3.z = 1;
-    } else if (internalV1.x < internalV1.z) {// y > z > x
-        vrt2.y = 1;
-        vrt3.y = 1;
-        vrt3.z = 1;
-    } else {// y > x > z
-        vrt2.y = 1;
-        vrt3.x = 1;
-        vrt3.y = 1;
-    }
-    const Vec3D internalV2 = internalV1 - vrt2 + Vec3D(0.1666666666, 0.1666666666, 0.1666666666);
-    const Vec3D internalV3 = internalV1 - vrt3 + Vec3D(0.3333333333, 0.3333333333, 0.3333333333);
-    const Vec3D internalV4 = internalV1 - Vec3D(0.5, 0.5, 0.5);
-
-    const Vec3 modSectionV(sectionV.x & 0xFF, sectionV.y & 0xFF, sectionV.z & 0xFF);
-    return 32.0 * (
-        grad(map(modSectionV.x          + map(modSectionV.y          + map(modSectionV.z         ))) % 12, internalV1, 0.6) + 
-        grad(map(modSectionV.x + vrt2.x + map(modSectionV.y + vrt2.y + map(modSectionV.z + vrt2.z))) % 12, internalV2, 0.6) + 
-        grad(map(modSectionV.x + vrt3.x + map(modSectionV.y + vrt3.y + map(modSectionV.z + vrt3.z))) % 12, internalV3, 0.6) + 
-        grad(map(modSectionV.x +      1 + map(modSectionV.y +      1 + map(modSectionV.z +      1))) % 12, internalV4, 0.6)
-    );
-}
-// see SimplexNoiseSampler constructor in SimplexNoiseSampler.java
-void SimplexNoise::init(Xoroshiro* rand) {
-    for (int i = 0; i < 256; i++)
-        permutation[i] = i;
-    for (int i = 0; i < 256; ++i) {
-        int r = rand->nextInt(256 - i);
-        // swap values at index i and i+r in the array
-        unsigned char perm = permutation[i];
-        permutation[i] = permutation[i + r];
-        permutation[i + r] = perm;
-    }
-}
-// see SimplexNoiseSampler.map function in SimplexNoiseSampler.java
-int SimplexNoise::map(const int& input) const {
-    return permutation[input & 0xFF];
-}
-// see SimplexNoiseSampler.grad function in SimplexNoiseSampler.java
-// r_2 of 0.5 is default, 0.6 may give better results ( see en.wikipedia.org/wiki/Simplex_noise )
-double SimplexNoise::grad(const int& hash, const Vec3D& V, double r_2) const {
-    double thing = std::max(0.0, r_2 - V.magnitude());
-    thing *= thing;
-    return thing * thing * dot(PERLIN_GRADIENTS[hash], V);// thing^4 * gradient[hash].dot(V)
-}
-#pragma endregion Simplex
-
-#pragma endregion Noise
+#pragma endregion tests

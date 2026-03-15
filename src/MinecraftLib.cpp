@@ -7,7 +7,6 @@ ChunkPos Pos::getChunkPos() const {
 Pos Pos::getOffsetPos(Pos offset) const {
     return operator+(offset);
 }
-// see BiomeCoords.fromBlock function in BiomeCoords.java
 BiomePos Pos::getBiomePos() const {
     return BiomePos(x >> 2, z >> 2);
 }
@@ -49,7 +48,6 @@ BiomePos& BiomePos::operator=(BiomePos&& move) {
     this->z = move.z;
     return *this;
 };
-// see BiomeCoords.toBlock function in BiomeCoords.java
 Pos BiomePos::getBlockPos() const {
     return Pos(x << 2, 0, z << 2);
 }
@@ -86,7 +84,6 @@ void BoundingBox::operator=(BoundingBox&& move) {
     maxX = move.maxX; maxY = move.maxY; maxZ = move.maxZ;
     color = move.color;
 }
-// see BoundingBox.rotated function in BoundingBox.java
 BoundingBox BoundingBox::rotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing) {
     Vec3 positionVec = Vec3(position.x, position.y, position.z);
     switch (facing.index) {
@@ -102,7 +99,6 @@ BoundingBox BoundingBox::rotated(const Pos& position, const Vec3& offset, const 
             return BoundingBox();
     }
 }
-// variation of BoundingBox.rotated function in BoundingBox.java that just returns a pointer
 BoundingBox* BoundingBox::newRotated(const Pos& position, const Vec3& offset, const Vec3& size, const Direction& facing) {
     Vec3 positionVec = Vec3(position.x, position.y, position.z);
     switch (facing.index) {
@@ -118,11 +114,9 @@ BoundingBox* BoundingBox::newRotated(const Pos& position, const Vec3& offset, co
             return new BoundingBox();
     }
 }
-// see BoundingBox.intersects function in BoundingBox.java
 bool BoundingBox::intersects(const BoundingBox& rhs) const {
     return (maxX >= rhs.minX) && (minX <= rhs.maxX) && (maxZ >= rhs.minZ) && (minZ <= rhs.maxZ) && (maxY >= rhs.minY) && (minY <= rhs.maxY);
 }
-//  see BoundingBox.encompass function in BoundingBox.java
 void BoundingBox::encompass(const BoundingBox& other) {
     minX = std::min(minX, other.minX);
     minY = std::min(minY, other.minY);
@@ -131,11 +125,9 @@ void BoundingBox::encompass(const BoundingBox& other) {
     maxY = std::max(maxY, other.maxY);
     maxZ = std::max(maxZ, other.maxZ);
 }
-//  see BoundingBox.move function in BoundingBox.java
 void BoundingBox::move(const Vec3& offset) {
     move(offset.x, offset.y, offset.z);
 }
-//  see BoundingBox.move function in BoundingBox.java
 void BoundingBox::move(const int& dx, const int& dy, const int& dz) {
     minX += dx;
     minY += dy;
@@ -144,19 +136,15 @@ void BoundingBox::move(const int& dx, const int& dy, const int& dz) {
     maxY += dy;
     maxZ += dz;
 }
-// see BoundingBox.getBlockCountX function in BoundingBox.java
 int BoundingBox::getBlockCountX() const {
     return maxX - minX + 1;
 }
-// see BoundingBox.getBlockCountY function in BoundingBox.java
 int BoundingBox::getBlockCountY() const {
     return maxY - minY + 1;
 }
-// see BoundingBox.getBlockCountZ function in BoundingBox.java
 int BoundingBox::getBlockCountZ() const {
     return maxZ - minZ + 1;
 }
-// see BoundingBox.getCenter function in BoundingBox.java
 Pos BoundingBox::getCenter() const {
     return Pos(minX + (getBlockCountX() / 2), minY + (getBlockCountY() / 2), minZ + (getBlockCountZ() / 2));
 }

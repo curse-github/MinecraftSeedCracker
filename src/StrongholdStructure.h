@@ -6,11 +6,6 @@
 #include "Random.h"
 #include "Lib.h"
 
-//  source/net/minecraft/world/level/levelgen/structure/structures/StrongholdStructure.java
-//      source/net/minecraft/world/level/levelgen/structure/structures/StrongholdPieces.java
-//          source/net/minecraft/world/level/levelgen/structure/StructurePiece.java
-
-// StrongholdPieces.SmallDoorType in source/net/minecraft/world/level/levelgen/structure/structures/StrongholdPieces.java
 struct PieceWeight {
     unsigned int pieceClass;
     unsigned int weight;

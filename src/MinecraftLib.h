@@ -60,7 +60,7 @@ struct BiomePos : public Vec2 {
     Pos getBlockPos() const;
 };
 
-// see Direction class in Direction.java
+// see Direction class in net.minecraft.core.Direction
 struct Direction {
     unsigned int index;
     unsigned int opposite_index;
@@ -82,7 +82,7 @@ enum DirectionIndices {
 extern Direction Directions[6];
 extern Direction HorizontalDirections[4];
 
-// see BoundingBox class in BoundingBox.java
+// see BoundingBox class in net.minecraft.world.level.levelgen.structure.BoundingBox
 struct BoundingBox {
     int minX;
     int minY;
@@ -98,7 +98,6 @@ struct BoundingBox {
         : minX(min.x), minY(min.y), minZ(min.z), maxX(max.x), maxY(max.y), maxZ(max.z) {}
     BoundingBox(const Pos& position, const Vec3& size)
         : minX(position.x), minY(position.y), minZ(position.z), maxX(position.x + size.x), maxY(position.y + size.y), maxZ(position.z + size.z) {}
-    // see StructurePiece.createBox function in StructurePiece.java
     BoundingBox(const Pos& origin, const Vec3& size, Direction orientation);
     BoundingBox(const BoundingBox& copy)
         : minX(copy.minX), minY(copy.minY), minZ(copy.minZ), maxX(copy.maxX), maxY(copy.maxY), maxZ(copy.maxZ), color(copy.color) {}

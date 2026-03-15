@@ -82,79 +82,57 @@ struct OwningNullable : public Nullable<T> {
 struct Vec2 {
     int x;
     int z;
-    Vec2(const int& _x, const int& _z) : x(_x), z(_z) {}
-    Vec2(const Vec2& copy) : x(copy.x), z(copy.z) {}
-    Vec2 operator+(const Vec2& rhs) const {
-        return Vec2(x + rhs.x, z + rhs.z);
-    }
-    Vec2 operator-(const Vec2& rhs) const {
-        return Vec2(x - rhs.x, z - rhs.z);
-    }
-    int magnitude() const {
-        return x*x + z*z;
-    }
+    Vec2();
+    Vec2(const int& _x, const int& _z);
+    Vec2(const Vec2& copy);
+    Vec2 operator+(const Vec2& rhs) const;
+    Vec2 operator-(const Vec2& rhs) const;
+    int magnitude() const;
 };
 struct Vec2D {
     double x;
     double z;
-    Vec2D(const double& _x, const double& _z) : x(_x), z(_z) {}
-    Vec2D(const Vec2D& copy) : x(copy.x), z(copy.z) {}
-    Vec2D operator+(const Vec2D& rhs) const {
-        return Vec2D(x + rhs.x, z + rhs.z);
-    }
-    Vec2D operator+(const Vec2& rhs) const {
-        return Vec2D(x + rhs.x, z + rhs.z);
-    }
-    Vec2D operator-(const Vec2D& rhs) const {
-        return Vec2D(x - rhs.x, z - rhs.z);
-    }
-    Vec2D operator-(const Vec2& rhs) const {
-        return Vec2D(x - rhs.x, z - rhs.z);
-    }
-    double magnitude() const {
-        return x*x + z*z;
-    }
+    Vec2D();
+    Vec2D(const double& _x, const double& _z);
+    Vec2D(const Vec2D& copy);
+    Vec2D operator+(const Vec2D& rhs) const;
+    Vec2D operator+(const Vec2& rhs) const;
+    Vec2D operator-(const Vec2D& rhs) const;
+    Vec2D operator-(const Vec2& rhs) const;
+    double magnitude() const;
 };
 struct Vec3 {
     int x;
     int y;
     int z;
-    Vec3() : x(0), y(0), z(0) {}
-    Vec3(const int& _x, const int& _y, const int& _z) : x(_x), y(_y), z(_z) {}
-    Vec3 operator+(const Vec3& rhs) const {
-        return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
-    }
-    Vec3 operator-(const Vec3& rhs) const {
-        return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
-    }
-    Vec3(const Vec3& copy) : x(copy.x), y(copy.y), z(copy.z) {}
-    int magnitude() const {
-        return x*x + y*y + z*z;
-    }
+    Vec3();
+    Vec3(const int& _x, const int& _y, const int& _z);
+    Vec3(const Vec3& copy);
+    Vec3 operator+(const Vec3& rhs) const;
+    Vec3 operator-(const Vec3& rhs) const;
+    int magnitude() const;
 };
 struct Vec3D {
     double x;
     double y;
     double z;
-    Vec3D() : x(0), y(0), z(0) {}
-    Vec3D(const double& _x, const double& _y, const double& _z) : x(_x), y(_y), z(_z) {}
-    Vec3D operator+(const Vec3D& rhs) const {
-        return Vec3D(x + rhs.x, y + rhs.y, z + rhs.z);
-    }
-    Vec3D operator+(const Vec3& rhs) const {
-        return Vec3D(x + rhs.x, y + rhs.y, z + rhs.z);
-    }
-    Vec3D operator-(const Vec3D& rhs) const {
-        return Vec3D(x - rhs.x, y - rhs.y, z - rhs.z);
-    }
-    Vec3D operator-(const Vec3& rhs) const {
-        return Vec3D(x - rhs.x, y - rhs.y, z - rhs.z);
-    }
-    Vec3D(const Vec3D& copy) : x(copy.x), y(copy.y), z(copy.z) {
-    }
-    double magnitude() const {
-        return x*x + y*y + z*z;
-    }
+    Vec3D();
+    Vec3D(const double& _x, const double& _y, const double& _z);
+    Vec3D operator+(const Vec3D& rhs) const;
+    Vec3D operator+(const Vec3& rhs) const;
+    Vec3D operator-(const Vec3D& rhs) const;
+    Vec3D operator-(const Vec3& rhs) const;
+    Vec3D(const Vec3D& copy);
+    double magnitude() const;
 };
+
+#include <string>// for std::string
+#include <vector>// for std::vector<T>
+#include <cmath>// for std::pow and std::sin
+
+const unsigned long long int maxWord = std::pow(2, 32);
+std::vector<unsigned int> md5Raw(const unsigned char* rawBytes, const unsigned int& rawSize);
+std::vector<unsigned int> md5Vector(const std::vector<unsigned char>& vec);
+std::string md5Str(std::string str);
 
 #endif// __LIB
