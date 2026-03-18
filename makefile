@@ -34,5 +34,5 @@ makeTmp:
 ./tmp/Noise.a: makeTmp ./tmp/Noise.o
 	$(LIB_BUILD) ./tmp/Noise.a ./tmp/Noise.o
 
-main.exe: ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/Biome.a ./tmp/Noise.a
-	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Random.a ./tmp/Lib.a ./tmp/Biome.a ./tmp/Noise.a
+main.exe: ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Lib.a ./tmp/Biome.a ./tmp/Noise.a ./tmp/Random.a
+	$(O_BUILD) ./main.exe ./src/main.cpp ./tmp/MinecraftLib.a ./tmp/StrongholdStructure.a ./tmp/RandomSolver.a ./tmp/Lib.a ./tmp/Biome.a ./tmp/Noise.a ./tmp/Random.a

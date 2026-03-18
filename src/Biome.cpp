@@ -627,6 +627,19 @@ Sampler::Sampler() {
 Climate::TargetPoint Sampler::sample(const QuartPos& quart) const {
     Pos block = quart.toBlock();
     DensityFunction::SinglePointContext context = DensityFunction::SinglePointContext(block);
+    /*std::cout << "    temperature\n";
+    temperature->compute(context);
+    std::cout << "    humidity\n";
+    humidity->compute(context);
+    std::cout << "    continentalness\n";
+    continentalness->compute(context);
+    std::cout << "    erosion\n";
+    erosion->compute(context);
+    std::cout << "    depth\n";
+    depth->compute(context);
+    std::cout << "    weirdness\n";
+    weirdness->compute(context);
+    std::cout << "    end\n";*/
     return Climate::TargetPoint(
         (float)temperature->compute(context),
         (float)humidity->compute(context),
@@ -680,12 +693,14 @@ MultiNoiseBiomeSource::findBiomeHorizontal_Output MultiNoiseBiomeSource::findBio
                 }
                 QuartPos noise = noiseCenter + QuartPos(x, 0, z);
                 Biome biome = getNoiseBiome(noise, Sampler());
+                std::cout << "    biome: \"" << biome << "\"\n";
                 if (allowed.test(biome)) {
                     if ((result.biome.size() == 0) || random.nextInt(found + 1) == 0) {
                         Vec3 resultPos(QuartPos::toBlock(noise.x), origin.y, QuartPos::toBlock(noise.z));
                         result.pos = resultPos;
                         result.biome = biome;
-                        if (findClosest) return result;
+                        if (findClosest)
+                            return result;
                     }
                     found++;
                 }

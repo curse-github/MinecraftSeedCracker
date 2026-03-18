@@ -67,18 +67,19 @@ std::vector<SectionPos> StructureFinder::generateRingPositions(const long long i
             MultiNoiseBiomeSource::findBiomeHorizontal_Output closestBiome = source.findBiomeHorizontal(pos.toBlockPos({8, 0, 8}), 112, preferredBiomes_contains, biomeRand);
             if (closestBiome.biome.size() != 0) {
                 SectionPos tmp = SectionPos::fromBlock(closestBiome.pos);
-                //std::cout << "offset = (" << (pos.x - tmp.x) << ", " << (pos.z - tmp.z) << ")\n";
+                std::cout << "offset = (" << (pos.x - tmp.x) << ", " << (pos.z - tmp.z) << ")\n";
                 pos = tmp;
             }
         }
         positions.emplace_back(pos);
         angle += TAU / spread;
-        if ((++positionInCircle) != spread) continue;
+        if ((++positionInCircle) != spread) return positions;//continue;
         circle++;
         positionInCircle = 0;
         spread += 2 * spread / (circle + 1);
         spread = std::min(spread, count - i);
         angle += JavaStructureRand.nextDouble() * TAU;
+        return positions;
     }
     return positions;
 }

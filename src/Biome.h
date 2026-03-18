@@ -202,8 +202,6 @@ void addSurfaceBiome(
 
 
 class Sampler {
-    OwnedPointer<DensityFunction> shift_x;
-    OwnedPointer<DensityFunction> shift_z;
     OwnedPointer<DensityFunction> temperature;
     OwnedPointer<DensityFunction> humidity;
     OwnedPointer<DensityFunction> continentalness;

@@ -75,7 +75,10 @@ ShiftNoise::~ShiftNoise() {
     delete noise;
 }
 double ShiftNoise::compute(const Pos& block) const {
-    return noise->getValue(block.x * 0.25, block.y * 0.25, block.z * 0.25)*4.0;
+    //std::cout << "            x-before-before\n";
+    const double out = noise->getValue(block.x * 0.25, block.y * 0.25, block.z * 0.25)*4.0;
+    //std::cout << "            x-before-after\n";
+    return out;
 }
 
 ShiftA::ShiftA(NoiseHolder* _noise) : ShiftNoise(_noise) {
@@ -104,10 +107,13 @@ ShiftedNoise::~ShiftedNoise() {
     delete noise;
 }
 double ShiftedNoise::compute(const DensityFunction::SinglePointContext& context) const {
-    double x = context.block.x * xzScale + shiftX->compute(context);
-    double y = context.block.y * yScale + shiftY->compute(context);
-    double z = context.block.z * xzScale + shiftZ->compute(context);
-    return noise->getValue(x, y, z);
+    //std::cout << "        x-before\n";
+    const double x = context.block.x * xzScale + shiftX->compute(context);
+    //std::cout << "        x-after\n";
+    const double y = context.block.y * yScale + shiftY->compute(context);
+    const double z = context.block.z * xzScale + shiftZ->compute(context);
+    const double out = noise->getValue(x, y, z);
+    return out;
 }
 
 
@@ -160,19 +166,184 @@ double Offset::compute(const DensityFunction::SinglePointContext& context) const
 #pragma endregion// DensityFunction
 
 
+#pragma region ImprovedNoise
+
+ImprovedNoise::ImprovedNoise(BitRandomSource* random) : p(256, 0) {
+    xo = random->nextDouble() * 256.0;
+    yo = random->nextDouble() * 256.0;
+    zo = random->nextDouble() * 256.0;
+    for (int i = 0; i < 256; i++)
+        p[i] = (char) i;
+    for (int i = 0; i < 256; i++) {
+        int offset = random->nextInt(256 - i);
+        char tmp = p[i];
+        p[i] = p[i + offset];
+        p[i + offset] = tmp;
+    }
+}
+ImprovedNoise::~ImprovedNoise() {
+
+}
+double ImprovedNoise::noise(const double& _x, const double& _y, const double& _z, const double& yScale, const double& yFudge) {
+    double yrFudge;
+    double x = _x + xo;
+    double y = _y + yo;
+    double z = _z + zo;
+    int xf = std::floor(x);
+    int yf = std::floor(y);
+    int zf = std::floor(z);
+    double xr = x - xf;
+    double yr = y - yf;
+    double zr = z - zf;
+    if (yScale != 0.0) {
+        double fudgeLimit;
+        if (yFudge >= 0.0 && yFudge < yr) {
+            fudgeLimit = yFudge;
+        } else {
+            fudgeLimit = yr;
+        }
+        yrFudge = std::floor(fudgeLimit / yScale + 1.0000000116860974E-7) * yScale;
+    } else {
+        yrFudge = 0.0;
+    }
+    //std::cout << "                    x-before-before-before-x-before\n";
+    double out = sampleAndLerp(xf, yf, zf, xr, yr - yrFudge, zr, yr);
+    //std::cout << "                    x-before-before-before-x-after\n";
+    return out;
+}
+double SimplexNoise_dot(const int g[3], const double& x, const double& y, const double& z) {
+    return g[0] * x + g[1] * y + g[2] * z;
+}
+int SimplexNoise_GRADIENT[16][3] = {
+    { 1, 1, 0 }, { -1, 1, 0 }, { 1, -1, 0 }, { -1, -1, 0 },
+    { 1, 0, 1 }, { -1, 0, 1 }, { 1, 0, -1 }, { -1, 0, -1 },
+    { 0, 1, 1 }, { 0, -1, 1 }, { 0, 1, -1 }, { 0, -1, -1 },
+    { 1, 1, 0 }, { 0, -1, 1 }, { -1, 1, 0 }, { 0, -1, -1 }
+};
+double ImprovedNoise::gradDot(int hash, double x, double y, double z) {
+    return SimplexNoise_dot(SimplexNoise_GRADIENT[hash & 0xF], x, y, z);
+}
+double smoothstep(const double& x) {
+    return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+}
+double lerp(const double& alpha1, const double& p0, const double& p1) {
+    return p0 + alpha1 * (p1 - p0);
+}
+double lerp2(const double& alpha1, const double& alpha2, const double& x00, const double& x10, const double& x01, const double& x11) {
+    return lerp(
+        alpha2,
+        lerp(alpha1, x00, x10), 
+        lerp(alpha1, x01, x11)
+    );
+}
+double lerp3(const double& alpha1, const double& alpha2, const double& alpha3, const double& x000, const double& x100, const double& x010, const double& x110, const double& x001, const double& x101, const double& x011, const double& x111) {
+    return lerp(
+        alpha3,
+        lerp2(alpha1, alpha2, x000, x100, x010, x110), 
+        lerp2(alpha1, alpha2, x001, x101, x011, x111)
+    );
+}
+int ImprovedNoise::getP(const int& x) {
+    return p[x & 0xff] & 0xff;
+}
+double ImprovedNoise::sampleAndLerp(int x, int y, int z, double xr, double yr, double zr, double yrOriginal) {
+    int x0 = getP(x);
+    int x1 = getP(x + 1);
+    int xy00 = getP(x0 + y);
+    int xy01 = getP(x0 + y + 1);
+    int xy10 = getP(x1 + y);
+    int xy11 = getP(x1 + y + 1);
+    double d000 = gradDot(getP(xy00 + z), xr, yr, zr);
+    double d100 = gradDot(getP(xy10 + z), xr - 1.0, yr, zr);
+    double d010 = gradDot(getP(xy01 + z), xr, yr - 1.0, zr);
+    double d110 = gradDot(getP(xy11 + z), xr - 1.0, yr - 1.0, zr);
+    double d001 = gradDot(getP(xy00 + z + 1), xr, yr, zr - 1.0);
+    double d101 = gradDot(getP(xy10 + z + 1), xr - 1.0, yr, zr - 1.0);
+    double d011 = gradDot(getP(xy01 + z + 1), xr, yr - 1.0, zr - 1.0);
+    double d111 = gradDot(getP(xy11 + z + 1), xr - 1.0, yr - 1.0, zr - 1.0);
+    double xAlpha = smoothstep(xr);
+    double yAlpha = smoothstep(yrOriginal);
+    double zAlpha = smoothstep(zr);
+    return lerp3(xAlpha, yAlpha, zAlpha, d000, d100, d010, d110, d001, d101, d011, d111);
+}
+
+#pragma endregion// ImprovedNoise
+
+
 #pragma region PerlinNoise
 
-PerlinNoise::PerlinNoise(WorldgenRandom* rand, const int& firstOctave, const std::vector<double>& amplitudes) {
-    // TODO
+PerlinNoise::PerlinNoise(LCG* random, const int& _firstOctave, const std::vector<double>& _amplitudes) : firstOctave(_firstOctave), amplitudes(_amplitudes), noiseLevels(amplitudes.size(), nullptr) {
+    int octaves = amplitudes.size();
+    int zeroOctaveIndex = -firstOctave;
+    ImprovedNoise* zeroOctave = new ImprovedNoise(random);
+    if (zeroOctaveIndex >= 0 && zeroOctaveIndex < octaves) {
+        double zeroOctaveAmplitude = amplitudes[zeroOctaveIndex];
+        if (zeroOctaveAmplitude != 0.0)
+            noiseLevels[zeroOctaveIndex] = zeroOctave;
+    }
+    for (int i = zeroOctaveIndex - 1; i >= 0; i--) {
+        if (i < octaves) {
+            double amplitude = amplitudes[i];
+            if (amplitude != 0.0)
+                noiseLevels[i] = new ImprovedNoise(random);
+            else
+                skipOctave(random);
+        } else
+            skipOctave(random);
+    }
+    lowestFreqInputFactor = std::pow(2.0, -zeroOctaveIndex);
+    lowestFreqValueFactor = std::pow(2.0, (octaves - 1)) / (std::pow(2.0, octaves) - 1.0);
+    maxValue = edgeValue(2.0);
 }
-double PerlinNoise::maxValue() {
-    return 0.0;// TODO
+PerlinNoise::~PerlinNoise() {
+    for(ImprovedNoise* noiseLevel : noiseLevels)
+        delete noiseLevel;
+};
+void PerlinNoise::skipOctave(LCG* random) {
+    random->nextSeed(262);
+}
+double PerlinNoise::edgeValue(double noiseValue) {
+    double value = 0.0;
+    double valueFactor = lowestFreqValueFactor;
+    for (int i = 0; i < noiseLevels.size(); i++) {
+        ImprovedNoise* noise = noiseLevels[i];
+        if (noise != nullptr)
+            value += amplitudes[i] * noiseValue * valueFactor;
+        valueFactor /= 2.0;
+    } 
+    return value;
+}
+double PerlinNoise::getMaxValue() {
+    return maxValue;
 }
 double PerlinNoise::getValue(const Vec3D& block) {
-    return getValue(block.x, block.y, block.z);
+    return getValue(block.x, block.y, block.z, 0.0, 0.0, false);
 }
 double PerlinNoise::getValue(const double& x, const double& y, const double& z) {
-    return 0.0;// TODO
+    return getValue(x, y, z, 0.0, 0.0, false);
+}
+double PerlinNoise::getValue(const double& x, const double& y, const double& z, const double& yScale, const double& yFudge, const bool& yFlatHack) {
+    double value = 0.0;
+    double factor = lowestFreqInputFactor;
+    double valueFactor = lowestFreqValueFactor;
+    for (int i = 0; i < noiseLevels.size(); i++) {
+        ImprovedNoise* noise = noiseLevels[i];
+        if (noise != nullptr) {
+            //std::cout << "                x-before-before-before-" << i << "\n";
+            double noiseVal = noise->noise(wrap(x * factor), yFlatHack ? -noise->yo : wrap(y * factor), wrap(z * factor), yScale * factor, yFudge * factor);
+            value += amplitudes[i] * noiseVal * valueFactor;
+        } 
+        factor *= 2.0;
+        valueFactor /= 2.0;
+    } 
+    return value;
+}
+long long int lfloor(const double& v) {
+    long long int i = (long long int)v;
+    return (v < i) ? (i - 1ll) : i;
+}
+double PerlinNoise::wrap(double x) {
+    return x - lfloor(x / 3.3554432E7 + 0.5) * 3.3554432E7;
 }
 
 #pragma endregion// PerlinNoise
@@ -184,9 +355,9 @@ double expectedDeviation(int octaveSpan) {
     return 0.1 * (1.0 + 1.0 / (octaveSpan + 1));
 }
 NormalNoise::NormalNoise(const int& firstOctave, const std::vector<double>& amplitudes) {
-    WorldgenRandom* thing = new WorldgenRandom(DensityFunction::world_seed);
-    first = new PerlinNoise(thing, firstOctave, amplitudes);
-    second = new PerlinNoise(thing, firstOctave, amplitudes);
+    rand = new LCG(DensityFunction::world_seed);
+    first = new PerlinNoise(rand, firstOctave, amplitudes);
+    second = new PerlinNoise(rand, firstOctave, amplitudes);
     int minOctave = 2147483647;
     int maxOctave = -2147483648;
     for (int i = 0; i < amplitudes.size(); i++) {
@@ -197,7 +368,7 @@ NormalNoise::NormalNoise(const int& firstOctave, const std::vector<double>& ampl
         }
     }
     valueFactor = 0.16666666666666666 / expectedDeviation(maxOctave - minOctave);
-    maxValue = (first->maxValue() + second->maxValue()) * valueFactor;
+    maxValue = (first->getMaxValue() + second->getMaxValue()) * valueFactor;
 }
 NormalNoise::~NormalNoise() {
     delete first;
@@ -211,7 +382,11 @@ double NormalNoise::getValue(const double& x, const double& y, const double& z) 
     double x2 = x * 1.0181268882175227;
     double y2 = y * 1.0181268882175227;
     double z2 = z * 1.0181268882175227;
-    return (first->getValue(x, y, z) + second->getValue(x2, y2, z2)) * valueFactor;
+    //std::cout << "            x-before-before-before\n";
+    const double firstValue = first->getValue(x, y, z);
+    //std::cout << "            x-before-before-after\n";
+    const double secondValue = second->getValue(x2, y2, z2);
+    return (firstValue + secondValue) * valueFactor;
 }
 
 #pragma endregion// NormalNoise

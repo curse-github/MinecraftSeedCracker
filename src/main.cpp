@@ -44,7 +44,17 @@ const bool constantPosition = false;
 int main(int argc, char** argv) {
     // testRand();
     // solve12Eye();
-    std::vector<SectionPos> strongholdPositions = StructureFinder::generateRingPositions(world_seed);
+    MultiNoiseBiomeSource source;
+    Climate::TargetPoint thing = Sampler().sample(QuartPos::fromBlock({ 0, 72, 0 }));
+    Biome biome = source.getNoiseBiome(thing);
+    std::cout << "temperature: " << (float)thing.temperature/10000.0f << "\n";
+    std::cout << "humidity: " << (float)thing.humidity/10000.0f << "\n";
+    std::cout << "continentalness: " << (float)thing.continentalness/10000.0f << "\n";
+    std::cout << "erosion: " << (float)thing.erosion/10000.0f << "\n";
+    std::cout << "depth: " << (float)thing.depth/10000.0f << "\n";
+    std::cout << "weirdness: " << (float)thing.weirdness/10000.0f << "\n";
+    std::cout << "biome: \"" << biome << "\"\n";
+    //std::vector<SectionPos> strongholdPositions = StructureFinder::generateRingPositions(world_seed);
     //desmosPrintPositions(strongholdPositions);
     return 0;
     SectionPos startSectionPos = Pos(1844, 0, -1643).toSectionPos();// found with www.chunkbase.com/apps/stronghold-finder

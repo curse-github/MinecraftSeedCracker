@@ -150,24 +150,51 @@ class Offset : public DensityFunction {
 };
 
 
+class ImprovedNoise {
+    public:
+    std::vector<char> p;
+    double xo;
+    double yo;
+    double zo;
+    ImprovedNoise(BitRandomSource* random);
+    ImprovedNoise(const ImprovedNoise& copy) = delete;
+    ImprovedNoise(ImprovedNoise&& move) = delete;
+    ImprovedNoise& operator=(const ImprovedNoise& copy) = delete;
+    ImprovedNoise& operator=(ImprovedNoise&& move) = delete;
+    ~ImprovedNoise();
+
+    double noise(const double& _x, const double& _y, const double& _z, const double& yScale, const double& yFudge);
+    static double gradDot(int hash, double x, double y, double z);
+    int getP(const int& x);
+    double sampleAndLerp(int x, int y, int z, double xr, double yr, double zr, double yrOriginal);
+};
 class PerlinNoise {
     public:
-    // TODO
-    PerlinNoise(WorldgenRandom* rand, const int& firstOctave, const std::vector<double>& amplitudes);
+    int firstOctave;
+    std::vector<double> amplitudes;
+    std::vector<ImprovedNoise*> noiseLevels;
+    double lowestFreqInputFactor;
+    double lowestFreqValueFactor;
+    double maxValue;
+    PerlinNoise(LCG* rand, const int& _firstOctave, const std::vector<double>& _amplitudes);
     PerlinNoise(const PerlinNoise& copy) = delete;
     PerlinNoise(PerlinNoise&& move) = delete;
     PerlinNoise& operator=(const PerlinNoise& copy) = delete;
     PerlinNoise& operator=(PerlinNoise&& move) = delete;
-    virtual ~PerlinNoise() {};
-    double maxValue();
+    virtual ~PerlinNoise();
+    double getMaxValue();
     double getValue(const Vec3D& block);
     double getValue(const double& x, const double& y, const double& z);
+    double getValue(const double& x, const double& y, const double& z, const double& yScale, const double& yFudge, const bool& yFlatHack);
+    static void skipOctave(LCG* random);
+    double edgeValue(double noiseValue);
+    double wrap(double x);
 };
 
 class NormalNoise {
     public:
     double valueFactor = 0.0;
-    WorldgenRandom* rand;
+    LCG* rand;
     PerlinNoise* first;
     PerlinNoise* second;
     double maxValue = 0.0;
