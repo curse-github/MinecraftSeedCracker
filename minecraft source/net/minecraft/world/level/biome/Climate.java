@@ -313,7 +313,16 @@
      return new Sampler(zero, zero, zero, zero, zero, zero, List.of());
    }
    public static final class Sampler extends Record { private final DensityFunction temperature; private final DensityFunction humidity; private final DensityFunction continentalness; private final DensityFunction erosion; private final DensityFunction depth; private final DensityFunction weirdness; private final List<Climate.ParameterPoint> spawnTarget;
-     public Sampler(DensityFunction temperature, DensityFunction humidity, DensityFunction continentalness, DensityFunction erosion, DensityFunction depth, DensityFunction weirdness, List<Climate.ParameterPoint> spawnTarget) { this.temperature = temperature; this.humidity = humidity; this.continentalness = continentalness; this.erosion = erosion; this.depth = depth; this.weirdness = weirdness; this.spawnTarget = spawnTarget; } public final String toString() { 
+     public Sampler(DensityFunction temperature, DensityFunction humidity, DensityFunction continentalness, DensityFunction erosion, DensityFunction depth, DensityFunction weirdness, List<Climate.ParameterPoint> spawnTarget) {
+      this.temperature = temperature;
+      this.humidity = humidity;
+      this.continentalness = continentalness;
+      this.erosion = erosion;
+      this.depth = depth;
+      this.weirdness = weirdness;
+      this.spawnTarget = spawnTarget;
+    }
+     public final String toString() { 
      public Climate.TargetPoint sample(int quartX, int quartY, int quartZ) {
        int blockX = QuartPos.toBlock(quartX);
        int blockY = QuartPos.toBlock(quartY);

@@ -79,6 +79,33 @@ struct OwningNullable : public Nullable<T> {
         return tmp;
     }
 };
+template<typename T>
+struct OwnedPointer {
+    T* value;
+    OwnedPointer(T* _value = nullptr) : value(_value) {};
+    OwnedPointer(const OwnedPointer<T>& copy) = delete;
+    OwnedPointer& operator=(const OwnedPointer<T>& copy) = delete;
+    OwnedPointer(OwnedPointer<T>&& move) : value(move.value) {
+        move.value = nullptr;
+    };
+    OwnedPointer& operator=(OwnedPointer<T>&& move) {
+        value = move.value;
+        move.value = nullptr;
+        return *this;
+    }
+    ~OwnedPointer() { if (value != nullptr) delete value; };
+    OwnedPointer& operator=(T* _value) {
+        if (value != nullptr) delete value;
+        value = _value;
+        return *this;
+    };
+    T* operator->() { return value; }
+    const T* operator->() const { return value; }
+    operator T*() { return value; }
+    operator const T*() const { return value; }
+    operator T&() { return *value; }
+    operator const T&() const { return *value; }
+};
 struct Vec2 {
     int x;
     int z;

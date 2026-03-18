@@ -7,6 +7,7 @@
 #include <climits>
 #include "MinecraftLib.h"
 #include "Random.h"
+#include "Noise.h"
 
 #define Biome std::string
 
@@ -199,29 +200,19 @@ void addSurfaceBiome(
     const Biome& second
 );
 
-class DensityFunction {
-    public:
-    DensityFunction();
-    
-    class SinglePointContext;
-    double compute(const SinglePointContext& context) const;
-
-    class SinglePointContext {
-        Pos block;
-        public:
-        SinglePointContext(const Pos& _block);
-    };
-};
 
 class Sampler {
-    DensityFunction temperature;
-    DensityFunction humidity;
-    DensityFunction continentalness;
-    DensityFunction erosion;
-    DensityFunction depth;
-    DensityFunction weirdness;
+    OwnedPointer<DensityFunction> shift_x;
+    OwnedPointer<DensityFunction> shift_z;
+    OwnedPointer<DensityFunction> temperature;
+    OwnedPointer<DensityFunction> humidity;
+    OwnedPointer<DensityFunction> continentalness;
+    OwnedPointer<DensityFunction> erosion;
+    OwnedPointer<DensityFunction> depth;
+    OwnedPointer<DensityFunction> weirdness;
     public:
     Sampler();
+    ~Sampler() {};
     Climate::TargetPoint sample(const QuartPos& quart) const;
 };
 

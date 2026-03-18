@@ -48,9 +48,10 @@ std::vector<std::string> STRONGHOLD_BIASED_TO {
 //          see "context.register(BuiltinStructureSets.STRONGHOLDS"... class in net.minecraft.data.worldgen.StructureSets
 //          see BiomeTags.STRONGHOLD_BIASED_TO value in net.minecraft.tags.BiomeTags
 //          see tag(BiomeTags.STRONGHOLD_BIASED_TO) list in net.minecraft.data.tags.BiomeTagsProvider
-std::vector<SectionPos> StructureFinder::generateRingPositions(const long long int& worldSeed, const int& distance, const int& count, int spread) {
+std::vector<SectionPos> StructureFinder::generateRingPositions(const long long int& world_seed, const int& distance, const int& count, int spread) {
+    DensityFunction::world_seed = world_seed;
     MultiNoiseBiomeSource source;
-    LCG JavaStructureRand(worldSeed);
+    LCG JavaStructureRand(world_seed);
     std::vector<SectionPos> positions;
     positions.reserve(count);
     int amount_attempted = 0;
@@ -64,8 +65,11 @@ std::vector<SectionPos> StructureFinder::generateRingPositions(const long long i
         {
             BiomeSet_ContainsPredicate preferredBiomes_contains(STRONGHOLD_BIASED_TO);
             MultiNoiseBiomeSource::findBiomeHorizontal_Output closestBiome = source.findBiomeHorizontal(pos.toBlockPos({8, 0, 8}), 112, preferredBiomes_contains, biomeRand);
-            if (closestBiome.biome.size() != 0)
-                pos = SectionPos::fromBlock(closestBiome.pos);
+            if (closestBiome.biome.size() != 0) {
+                SectionPos tmp = SectionPos::fromBlock(closestBiome.pos);
+                //std::cout << "offset = (" << (pos.x - tmp.x) << ", " << (pos.z - tmp.z) << ")\n";
+                pos = tmp;
+            }
         }
         positions.emplace_back(pos);
         angle += TAU / spread;

@@ -230,7 +230,9 @@
 /*     */ 
 /*     */ 
 /*     */   
-/* 233 */   private static DensityFunction getFunction(HolderGetter<DensityFunction> functions, ResourceKey<DensityFunction> name) { return new DensityFunctions.HolderHolder(functions.getOrThrow(name)); }
+/* 233 */   private static DensityFunction getFunction(HolderGetter<DensityFunction> functions, ResourceKey<DensityFunction> name) {
+    return new DensityFunctions.HolderHolder(functions.getOrThrow(name));
+}
 /*     */ 
 /*     */ 
 /*     */ 

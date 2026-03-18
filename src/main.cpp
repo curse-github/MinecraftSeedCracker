@@ -3,7 +3,7 @@
 #include "RandomSolver.h"
 #include "StrongholdStructure.h"
 
-const long long int worldSeed = 8606738414634885904ull;
+const long long int world_seed = 8606738414634885904ull;
 void desmosPrintPositions(const std::vector<SectionPos>& positions, const int& radius = 50000) {
     std::cout << "\npaste into the javascript console of https://www.desmos.com/calculator.\n\n";
     std::cout << "document.getElementById('graph-container').innerHTML = \"\";\n";
@@ -17,7 +17,7 @@ void desmosPrintPositions(const std::vector<SectionPos>& positions, const int& r
     std::cout << '\n';
     for (unsigned int i = 0; i < positions.size(); i++) {
         const Pos pos = positions[i].toBlockPos({ 4, 0, 4 });
-        std::cout << "www.chunkbase.com/apps/stronghold-finder#seed=" << worldSeed << "&platform=java_1_21_9&x=" << pos.x << "&z=" << pos.z << "&zoom=1.25\n";
+        std::cout << "www.chunkbase.com/apps/stronghold-finder#seed=" << world_seed << "&platform=java_1_21_9&x=" << pos.x << "&z=" << pos.z << "&zoom=1.25\n";
     }
 }
 void desmosPrintBoundingBoxes(const Pos& entrance, const std::vector<BoundingBox>& boxes, const Pos& portalPos) {
@@ -44,17 +44,17 @@ const bool constantPosition = false;
 int main(int argc, char** argv) {
     // testRand();
     // solve12Eye();
-    std::vector<SectionPos> strongholdPositions = StructureFinder::generateRingPositions(worldSeed);
-    desmosPrintPositions(strongholdPositions);
+    std::vector<SectionPos> strongholdPositions = StructureFinder::generateRingPositions(world_seed);
+    //desmosPrintPositions(strongholdPositions);
     return 0;
     SectionPos startSectionPos = Pos(1844, 0, -1643).toSectionPos();// found with www.chunkbase.com/apps/stronghold-finder
-    OwningNullable<StartEndBoxes> strongholdDataOwner = getPortalRoomPosition(worldSeed, startSectionPos, true);
+    OwningNullable<StartEndBoxes> strongholdDataOwner = getPortalRoomPosition(world_seed, startSectionPos, true);
     StartEndBoxes& strongholdData = strongholdDataOwner.getValue();
     BoundingBox boundingBox = strongholdData.boxes[0];
     for (size_t i = 1; i < strongholdData.boxes.size(); i++) boundingBox.encompass(strongholdData.boxes[i]);
     strongholdData.boxes.push_back(boundingBox);
     desmosPrintBoundingBoxes(strongholdData.start, strongholdData.boxes, strongholdData.end);
-    std::cout << "www.chunkbase.com/apps/stronghold-finder#seed=" << worldSeed << "&platform=java_1_21_9&x=" << strongholdData.start.x << "&z=" << strongholdData.start.z << "&zoom=1.25\n";
+    std::cout << "www.chunkbase.com/apps/stronghold-finder#seed=" << world_seed << "&platform=java_1_21_9&x=" << strongholdData.start.x << "&z=" << strongholdData.start.z << "&zoom=1.25\n";
     std::cout << "entrance pos: /tp " << strongholdData.start.x << " " << strongholdData.start.y << " " << strongholdData.start.z << "\n";
     std::cout << "portal pos: /tp " << strongholdData.end.x << " " << strongholdData.end.y << " " << strongholdData.end.z << "\n";
     return 0;

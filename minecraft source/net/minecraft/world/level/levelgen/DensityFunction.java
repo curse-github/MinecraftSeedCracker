@@ -72,7 +72,9 @@
 /*     */       // Local variable table:
 /*     */       //   start	length	slot	name	descriptor
 /*     */       //   0	8	0	this	Lnet/minecraft/world/level/levelgen/DensityFunction$NoiseHolder;
-/*  46 */       //   0	8	1	o	Ljava/lang/Object; } public Holder<NormalNoise.NoiseParameters> noiseData() { return this.noiseData; } public NormalNoise noise() { return this.noise; }
+/*  46 */       //   0	8	1	o	Ljava/lang/Object; }
+                public Holder<NormalNoise.NoiseParameters> noiseData() { return this.noiseData; }
+                public NormalNoise noise() { return this.noise; }
 /*     */ 
 /*     */ 
 /*     */ 

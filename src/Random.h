@@ -65,6 +65,17 @@ class LCG : public BitRandomSource {
     LCGSplitter nextSplitter();
 };
 
+class WorldgenRandom : public LCG {
+    public:
+    // TODO
+    WorldgenRandom(const long long int& seed) : LCG(seed) {};
+    WorldgenRandom(const WorldgenRandom& copy) = delete;
+    WorldgenRandom(WorldgenRandom&& move) = delete;
+    WorldgenRandom& operator=(const WorldgenRandom& copy) = delete;
+    WorldgenRandom& operator=(WorldgenRandom&& move) = delete;
+    ~WorldgenRandom() {};
+};
+
 struct XoroshiroSplitter;
 class Xoroshiro : public BitRandomSource {
     long long int seedLo;

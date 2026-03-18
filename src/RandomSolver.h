@@ -12,7 +12,7 @@
 class StructureFinder {
     public:
     StructureFinder() {}
-    static std::vector<SectionPos> generateRingPositions(const long long int& worldSeed, const int& distance=32, const int& count=128, int spread=3);
+    static std::vector<SectionPos> generateRingPositions(const long long int& world_seed, const int& distance=32, const int& count=128, int spread=3);
 };
 
 struct RandomRange {

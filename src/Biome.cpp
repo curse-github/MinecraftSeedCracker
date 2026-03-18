@@ -610,32 +610,30 @@ void addSurfaceBiome(
 #pragma endregion// addBiomes
 
 
-DensityFunction::DensityFunction() {
-
+//  see Climate.Sampler class in net.minecraft.world.level.biome.Climate
+//  see RandomState.sampler assignment net.minecraft.world.level.levelgen.RandomState
+//  see RandomState.router assignment net.minecraft.world.level.levelgen.RandomState
+//  see NoiseGeneratorSettings.overworld function net.minecraft.world.level.levelgen.NoiseGeneratorSettings
+//      NoiseRouterData.overworld(context.lookup(Registries.DENSITY_FUNCTION), context.lookup(Registries.NOISE), false, false)
+//  see NoiseRouterData.overworld function in net.minecraft.world.level.levelgen.NoiseRouterData
+Sampler::Sampler() {
+    temperature = (DensityFunction*) new ShiftedNoise(DensityFunction::shift_x(), DensityFunction::zero(), DensityFunction::shift_z(), 0.25, 0.0, DensityFunction::noise_temperature());
+    humidity = (DensityFunction*) new ShiftedNoise(DensityFunction::shift_x(), DensityFunction::zero(), DensityFunction::shift_z(), 0.25, 0.0, DensityFunction::noise_vegetation());
+    continentalness = DensityFunction::continents();
+    erosion = DensityFunction::erosion();
+    depth = DensityFunction::depth();
+    weirdness = DensityFunction::ridges();
 }
-//  see DensityFunction class in net.minecraft.world.level.levelgen.DensityFunction
-//      line 191
-//  see <? extends DensityFunction> classes in net.minecraft.world.level.levelgen.DensityFunctions
-double DensityFunction::compute(const DensityFunction::SinglePointContext& context) const {
-    // TODO
-    return 0.0;
-};
-// see DensityFunction.SinglePointContext class in net.minecraft.world.level.levelgen.DensityFunction
-DensityFunction::SinglePointContext::SinglePointContext(const Pos& _block) : block(_block) {}
-
-
-// see Climate.Sampler class in net.minecraft.world.level.biome.Climate
-Sampler::Sampler() : temperature({}), humidity({}), continentalness({}), erosion({}), depth({}), weirdness({}) {};
 Climate::TargetPoint Sampler::sample(const QuartPos& quart) const {
     Pos block = quart.toBlock();
     DensityFunction::SinglePointContext context = DensityFunction::SinglePointContext(block);
     return Climate::TargetPoint(
-        (float)temperature.compute(context),
-        (float)humidity.compute(context),
-        (float)continentalness.compute(context),
-        (float)erosion.compute(context),
-        (float)depth.compute(context),
-        (float)weirdness.compute(context)
+        (float)temperature->compute(context),
+        (float)humidity->compute(context),
+        (float)continentalness->compute(context),
+        (float)erosion->compute(context),
+        (float)depth->compute(context),
+        (float)weirdness->compute(context)
     );
 }
 
